@@ -53,6 +53,8 @@ const brandSchema = new Schema(
   },
   {
     timestamps: true,
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
   }
 );
 brandSchema.virtual("products", {
