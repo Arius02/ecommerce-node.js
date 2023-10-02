@@ -37,7 +37,7 @@ export const getSingleSubCategory = errorHandler(async (req, res, next) => {
     },
     {
       path: "products",
-      select: "name _id image",
+      select: "name _id coverImage",
       options: { skip: productSkip, limit: productLimit },
     },
   ]);

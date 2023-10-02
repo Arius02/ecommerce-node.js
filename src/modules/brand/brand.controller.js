@@ -26,7 +26,7 @@ export const getSinglebBrand = async (req, res, next) => {
   });
   const brand = await brandModel.findById(_id).populate({
     path: "products",
-    select: "name _id image",
+    select: "name _id coverImage",
     options: { skip: productSkip, limit: productLimit },
   });
   if (!brand) {
