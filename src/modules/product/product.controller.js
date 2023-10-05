@@ -14,7 +14,7 @@ import {
   handleUploadBulkOfImages,
   handleUploadSingleImage,
 } from "../../utils/handleImages.js";
-import { cloudindaryPath } from "../../utils/factory.js";
+import { cloudindaryPath, handlePrice } from "../../utils/factory.js";
 import { ApiFeatures } from "../../utils/apiFeatures.js";
 
 export const addProduct = errorHandler(async (req, res, next) => {
