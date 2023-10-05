@@ -175,8 +175,8 @@ export const updateProduct = errorHandler(async (req, res, next) => {
     .json({ message: "product updated successfully.", product });
 });
 export const deleteProduct = errorHandler(async (req, res, next) => {
-  const { _id } = req.params;
-  const product = await productModel.findByIdAndDelete(_id);
+  const { productId } = req.params;
+  const product = await productModel.findByIdAndDelete(productId);
   if (!product) {
     return next(new AppError("invalid product id", 400));
   }

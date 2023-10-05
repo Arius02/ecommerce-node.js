@@ -33,7 +33,7 @@ router
   .get(getAllProducts);
 
 router
-  .route("/:_id")
+  .route("/:productId")
   .put(
     auth(),
     allowTo([systemRoles.SUPER_ADMIN, systemRoles.ADMIN]),
