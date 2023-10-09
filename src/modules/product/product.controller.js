@@ -83,7 +83,7 @@ export const addProduct = errorHandler(async (req, res, next) => {
   res.status(200).json({ message: "Added Done", product });
 });
 
-export const updateProduct = errorHandler(async (req, res, next) => {
+export const updateProduct = async (req, res, next) => {
   const {
     name,
     desc,
@@ -148,11 +148,11 @@ export const updateProduct = errorHandler(async (req, res, next) => {
     product.coverImage = { secure_url, public_id };
   }
   if (req.files?.images?.length && imagesToDelete) {
-    const parsedImagesToDelete = JSON.parse(imagesToDelete);
+    const imagesToDeleteArr = imagesToDelete.split(",");
     const handleResult = await handleImagesUpdateAndDelete(
       productId,
       req.files.images,
-      parsedImagesToDelete,
+      imagesToDeleteArr,
       product,
       path,
       next
@@ -173,7 +173,7 @@ export const updateProduct = errorHandler(async (req, res, next) => {
   return res
     .status(201)
     .json({ message: "product updated successfully.", product });
-});
+};
 export const deleteProduct = errorHandler(async (req, res, next) => {
   const { productId } = req.params;
   const product = await productModel.findByIdAndDelete(productId);

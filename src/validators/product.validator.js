@@ -24,6 +24,7 @@ export const updateProductSchema = {
     categoryId: generalFields._id,
     subCategoryId: generalFields._id,
     brandId: generalFields._id,
+    imagesToDelete: Joi.string().optional(),
   }),
   params: Joi.object({
     productId: generalFields._id.required(),
