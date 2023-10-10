@@ -37,6 +37,6 @@ export const deleteProductSchema = {
 };
 export const getSingleProductSchema = {
   params: Joi.object({
-    _id: generalFields._id,
+    productId: generalFields._id,
   }),
 };

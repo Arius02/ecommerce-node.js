@@ -195,8 +195,8 @@ export const deleteProduct = errorHandler(async (req, res, next) => {
 });
 
 export const getSingleProduct = errorHandler(async (req, res, next) => {
-  const { _id } = req.params;
-  const product = await productModel.findById(_id);
+  const { productId } = req.params;
+  const product = await productModel.findById(productId);
   if (!product) {
     return next(new AppError("invalid product id", 400));
   }
