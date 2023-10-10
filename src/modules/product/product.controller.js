@@ -194,14 +194,19 @@ export const deleteProduct = errorHandler(async (req, res, next) => {
   res.status(200).json({ message: "product deleted successfully.", product });
 });
 
-export const getSingleProduct = errorHandler(async (req, res, next) => {
+export const getSingleProduct = async (req, res, next) => {
   const { productId } = req.params;
-  const product = await productModel.findById(productId);
+  const product = await productModel.findById(productId).populate([
+    { path: "category.categoryId", select: "name " },
+    { path: "subCategory.subCategoryId", select: "name " },
+    { path: "brand.brandId", select: "name " },
+  ]);
+
   if (!product) {
     return next(new AppError("invalid product id", 400));
   }
   return res.status(200).json({ message: "Done", product });
-});
+};
 export const getAllProducts = errorHandler(async (req, res, next) => {
   const { search } = req.query;
   const apiFeaturesInstance = new ApiFeatures(
@@ -220,3 +225,11 @@ export const getAllProducts = errorHandler(async (req, res, next) => {
   const products = await apiFeaturesInstance.mongooseQuery;
   res.status(200).json({ message: "Done", page: req.query.page, products });
 });
+
+export const toggleDisabled = async (req, res, next) => {
+  const { productId } = req.params;
+  const product = await productModel.findById(productId);
+  product.isDisabled = !product.isDisabled;
+  await product.save();
+  return res.status(201).json({ message: "Done" });
+};

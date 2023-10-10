@@ -35,7 +35,7 @@ export const deleteProductSchema = {
     productId: generalFields._id,
   }),
 };
-export const getSingleProductSchema = {
+export const generalProductSchema = {
   params: Joi.object({
     productId: generalFields._id,
   }),

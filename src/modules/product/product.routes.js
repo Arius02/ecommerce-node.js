@@ -5,13 +5,14 @@ import {
   deleteProduct,
   getAllProducts,
   getSingleProduct,
+  toggleDisabled,
   updateProduct,
 } from "./product.controller.js";
 import { validationCoreFunction } from "../../middlewares/validation.middleware.js";
 import {
   addProductSchema,
   deleteProductSchema,
-  getSingleProductSchema,
+  generalProductSchema,
   updateProductSchema,
 } from "../../validators/product.validator.js";
 import auth, { allowTo } from "../../middlewares/auth.middleware.js";
@@ -50,5 +51,6 @@ router
     validationCoreFunction(deleteProductSchema),
     deleteProduct
   )
-  .get(validationCoreFunction(getSingleProductSchema), getSingleProduct);
+  .get(validationCoreFunction(generalProductSchema), getSingleProduct)
+  .patch(validationCoreFunction(generalProductSchema), toggleDisabled);
 export default router;

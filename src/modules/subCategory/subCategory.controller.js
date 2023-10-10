@@ -47,16 +47,22 @@ export const getSingleSubCategory = errorHandler(async (req, res, next) => {
   return res.status(200).json({ message: "Done", subCategory });
 });
 export const getAllSubCategories = errorHandler(async (req, res, next) => {
-  const { page, size } = req.query;
-  const { limit, skip } = paginationFunction({ page, size });
-  const subCategories = await subCategoryModel
-    .find()
-    .skip(skip)
-    .limit(limit)
-    .populate({
-      path: "category.categoryId",
-      select: "name",
-    });
+  const { search } = req.query;
+  const apiFeaturesInstance = new ApiFeatures(
+    subCategoryModel
+      .find({
+        name: { $regex: search ? search : ".", $options: "i" },
+      })
+      .populate([
+        {
+          path: "category.categoryId",
+          select: "name _id image",
+        },
+      ]),
+    req.query
+  ).pagination();
+
+  const subCategories = await apiFeaturesInstance.mongooseQuery;
   res
     .status(200)
     .json({ message: "Done", page: req.query.page, subCategories });

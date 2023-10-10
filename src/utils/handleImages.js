@@ -39,7 +39,6 @@ export async function handleImagesUpdateAndDelete(
   path,
   next
 ) {
-  console.log(imagesToDelete, _id);
   const check = await productModel.findOne({
     _id,
     "images.public_id": { $in: imagesToDelete },

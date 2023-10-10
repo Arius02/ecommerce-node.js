@@ -63,11 +63,14 @@ export const getSingleCategory = errorHandler(async (req, res, next) => {
   return res.status(200).json({ message: "Done", category });
 });
 export const getAllCategories = errorHandler(async (req, res, next) => {
-  const apiFeaturesInstance = new ApiFeatures(categoryModel.find({}), req.query)
-    .pagination()
-    .filters()
-    .sort()
-    .select();
+  const { search } = req.query;
+  const apiFeaturesInstance = new ApiFeatures(
+    categoryModel.find({
+      name: { $regex: search ? search : ".", $options: "i" },
+    }),
+    req.query
+  ).pagination();
+
   const categories = await apiFeaturesInstance.mongooseQuery;
   res.status(200).json({ message: "Done", page: req.query.page, categories });
 });

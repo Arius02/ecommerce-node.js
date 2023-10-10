@@ -35,15 +35,25 @@ export const getSinglebBrand = async (req, res, next) => {
   return res.status(200).json({ message: "Done", brand });
 };
 export const getAllBrands = async (req, res, next) => {
-  const { page, size } = req.query;
-  const { limit, skip } = paginationFunction({ page, size });
-  const brands = await brandModel
-    .find()
-    .skip(skip)
-    .limit(limit)
-    .populate([
-      { path: "category.categoryId", select: "name" },
-      { path: "subCategory.subCategoryId", select: "name" },
-    ]);
+  const { search } = req.query;
+  const apiFeaturesInstance = new ApiFeatures(
+    brandModel
+      .find({
+        name: { $regex: search ? search : ".", $options: "i" },
+      })
+      .populate([
+        {
+          path: "category.categoryId",
+          select: "name _id image",
+        },
+        {
+          path: "subCategory.subCategoryId",
+          select: "name _id image",
+        },
+      ]),
+    req.query
+  ).pagination();
+
+  const brands = await apiFeaturesInstance.mongooseQuery;
   res.status(200).json({ message: "Done", page: req.query.page, brands });
 };
