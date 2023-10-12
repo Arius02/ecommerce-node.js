@@ -5,14 +5,14 @@ export const addReviewSchema = {
   body: Joi.object({
     productId: generalFields._id.required(),
     rating: Joi.number().integer().positive().min(1).max(5).required(),
-    reviewDesc: Joi.string().min(4).max(100),
+    reviewDisc: Joi.string().min(4).max(100),
   }),
 };
 export const updateReviewSchema = {
   body: Joi.object({
     reviewId: generalFields._id.required(),
     rating: Joi.number().integer().positive().min(1).max(5).optional(),
-    reviewDesc: Joi.string().min(4).max(100).optional(),
+    reviewDisc: Joi.string().min(4).max(100).optional(),
   }),
 };
 export const deleteReviewSchema = {

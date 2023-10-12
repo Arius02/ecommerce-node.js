@@ -17,7 +17,7 @@ const updateRating = (reviews, review) => {
 };
 export const addReview = errorHandler(async (req, res, next) => {
   const { _id } = req.user;
-  const { reviewDesc, rating, productId } = req.body;
+  const { reviewDisc, rating, productId } = req.body;
 
   // Check if the user has purchased the product before allowing a review
   // const allowRev = await orderModel.findOne({
@@ -57,7 +57,7 @@ export const addReview = errorHandler(async (req, res, next) => {
   // Add the user's review to the reviews array
   review.reviews.push({
     userId: _id,
-    reviewDesc,
+    reviewDisc,
     rating,
     reviewedAt: new Date(),
   });
