@@ -33,16 +33,16 @@ export const addReview = errorHandler(async (req, res, next) => {
   // }
 
   // Check if the user has already reviewed this product
-  const isRevBefore = await reviewModel.findOne({
-    productId,
-    "reviews.userId": _id,
-  });
+  // const isRevBefore = await reviewModel.findOne({
+  //   productId,
+  //   "reviews.userId": _id,
+  // });
 
-  if (isRevBefore) {
-    return next(
-      new AppError("You have already reviewed this product before.", 400)
-    );
-  }
+  // if (isRevBefore) {
+  //   return next(
+  //     new AppError("You have already reviewed this product before.", 400)
+  //   );
+  // }
 
   // Find an existing review document for the product or create a new one
   let review = await reviewModel.findOne({ productId });
@@ -144,13 +144,17 @@ export const deleteReview = errorHandler(async (req, res, next) => {
 
 export const getProductReviews = errorHandler(async (req, res, next) => {
   const { productId } = req.params;
-  const parse = JSON.parse(req.query.ratings);
+  let rarings = [1, 5];
+  if (req.query.ratings) {
+    rarings = JSON.parse(req.query.ratings);
+  }
+
   const apiFeaturesInstance = new ApiFeatures(
     reviewModel.find({
       productId,
       reviews: {
         $elemMatch: {
-          rating: { $in: [...parse] },
+          rating: { $in: [...rarings] },
         },
       },
     }),
