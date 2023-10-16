@@ -5,7 +5,7 @@ import { orderModel } from "../../../database/models/order.model.js";
 import { reviewModel } from "../../../database/models/review.model.js";
 import { ApiFeatures } from "../../utils/apiFeatures.js";
 import { systemRoles } from "../../utils/systemRoles.js";
-
+import { productModel } from "../../../database/models/product.model.js";
 const updateRating = (reviews, review) => {
   if (reviews && reviews.length > 0) {
     // Calculate the total rating by summing up all the ratings
@@ -18,7 +18,10 @@ const updateRating = (reviews, review) => {
 export const addReview = errorHandler(async (req, res, next) => {
   const { _id } = req.user;
   const { reviewDisc, rating, productId } = req.body;
-
+  const product = await productModel.findById(productId);
+  if (!product) {
+    return next(new AppError("productId is required", 4004));
+  }
   // Check if the user has purchased the product before allowing a review
   // const allowRev = await orderModel.findOne({
   //   userId: _id,
@@ -35,7 +38,7 @@ export const addReview = errorHandler(async (req, res, next) => {
   // Check if the user has already reviewed this product
   // const isRevBefore = await reviewModel.findOne({
   //   productId,
-  //   "reviews.userId": _id,
+  //   "userId": _id,
   // });
 
   // if (isRevBefore) {
@@ -44,45 +47,30 @@ export const addReview = errorHandler(async (req, res, next) => {
   //   );
   // }
 
-  // Find an existing review document for the product or create a new one
-  let review = await reviewModel.findOne({ productId });
-
-  if (!review) {
-    review = new reviewModel({
-      productId,
-      reviews: [],
-    });
-  }
-
-  // Add the user's review to the reviews array
-  review.reviews.push({
+  // create a new review
+  let review = await reviewModel.create({
+    productId,
     userId: _id,
     reviewDisc,
     rating,
-    reviewedAt: new Date(),
   });
-  updateRating(review.reviews, review);
-  // Save the review document with the new review
-  await review.save();
 
   return res.status(201).json({ message: "Done", review });
 });
 
 export const updateReview = errorHandler(async (req, res, next) => {
   const { _id } = req.user;
-  const { reviewId, reviewDesc, rating } = req.body;
+  const { reviewId, reviewDisc, rating } = req.body;
 
   // Find the review based on reviewId and user's ID
   const review = await reviewModel.findOneAndUpdate(
     {
-      "reviews._id": reviewId,
-      "reviews.userId": _id,
+      _id: reviewId,
+      userId: _id,
     },
     {
-      $set: {
-        "reviews.$.reviewDesc": reviewDesc,
-        "reviews.$.rating": rating,
-      },
+      reviewDisc,
+      rating,
     },
     { new: true } // Return the updated document
   );
@@ -90,40 +78,31 @@ export const updateReview = errorHandler(async (req, res, next) => {
   if (!review) {
     return next(
       new AppError(
-        "Rmade eview not found or you don't have permission to update it.",
+        "Review not found or you don't have permission to update it.",
         404
       )
     );
   }
-  updateRating(review.reviews, review);
   return res.status(200).json({ message: "Done", review });
 });
 
-export const deleteReview = errorHandler(async (req, res, next) => {
-  const { _id } = req.user;
+export const deleteReview = async (req, res, next) => {
+  const { _id, role } = req.user;
   const { reviewId } = req.params;
   let options;
   //to give admin the premmision to delete any review
-  if (user.role == systemRoles.ADMIN || user.role == systemRoles.SUPER_ADMIN) {
+  if (role == systemRoles.ADMIN || role == systemRoles.SUPER_ADMIN) {
     options = {
-      "reviews._id": reviewId,
+      _id: reviewId,
     };
   } else {
     options = {
-      "reviews._id": reviewId,
-      "reviews.userId": _id,
+      _id: reviewId,
+      userId: _id,
     };
   }
   // Find and delete the review based on reviewId and user's ID
-  const review = await reviewModel.findOneAndUpdate(
-    options,
-    {
-      $pull: {
-        reviews: { _id: reviewId },
-      },
-    },
-    { new: true } // Return the updated document
-  );
+  const review = await reviewModel.findOneAndDelete(options);
   if (!review) {
     return next(
       new AppError(
@@ -132,39 +111,25 @@ export const deleteReview = errorHandler(async (req, res, next) => {
       )
     );
   }
-  updateRating(review.reviews, review);
-  await review.save();
-  // Check if the review array is empty, and if so, remove the review document
-  if (review.reviews.length === 0) {
-    await reviewModel.findByIdAndRemove(review._id);
-  }
 
   return res.status(200).json({ message: "Done", review });
-});
+};
 
 export const getProductReviews = errorHandler(async (req, res, next) => {
   const { productId } = req.params;
-  let rarings = [1, 5];
-  if (req.query.ratings) {
-    rarings = JSON.parse(req.query.ratings);
-  }
 
   const apiFeaturesInstance = new ApiFeatures(
     reviewModel.find({
       productId,
-      reviews: {
-        $elemMatch: {
-          rating: { $in: [...rarings] },
-        },
-      },
     }),
     req.query
   )
     .pagination()
+    .filters()
     .sort();
   const reviews = await apiFeaturesInstance.mongooseQuery;
 
   return res
     .status(200)
-    .json({ message: "Done", count: reviews.length, reviews });
+    .json({ message: "Done", page: req.query.page, reviews });
 });

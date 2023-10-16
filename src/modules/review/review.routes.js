@@ -21,7 +21,7 @@ router
   .post(auth(), validationCoreFunction(addReviewSchema), addReview)
   .put(
     auth(),
-    allowTo([systemRoles.USER]),
+    // allowTo([systemRoles.USER]),
     validationCoreFunction(updateReviewSchema),
     updateReview
   );

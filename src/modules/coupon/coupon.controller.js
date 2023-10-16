@@ -7,6 +7,8 @@ import {
 } from "../../utils/couponValidation.js";
 import { orderModel } from "../../../database/models/order.model.js";
 import { AppError } from "../../utils/AppErorr.js";
+import { systemRoles } from "../../utils/systemRoles.js";
+import { ApiFeatures } from "../../utils/apiFeatures.js";
 
 export const addCoupon = errorHandler(async (req, res, next) => {
   const { _id } = req.user;
@@ -63,13 +65,31 @@ export const deleteCoupon = errorHandler(async (req, res, next) => {
 });
 export const getAllCoupons = errorHandler(async (req, res, next) => {
   const { _id } = req.user;
-  const coupons = await couponModel.find({ createdBy: _id });
+  const { search } = req.query;
+  const options = { createdBy: _id };
+  if (req.user.role == systemRoles.SUPER_ADMIN) {
+    options = {};
+  }
+  const apiFeaturesInstance = new ApiFeatures(
+    couponModel.find({
+      ...options,
+      $or: [
+        { name: { $regex: search ? search : ".", $options: "i" } },
+        { desc: { $regex: search ? search : ".", $options: "i" } },
+      ],
+    }),
+    req.query
+  )
+    .pagination()
+    .filters()
+    .sort();
+  const coupons = await apiFeaturesInstance.mongooseQuery;
   if (!coupons) {
     return next(new AppError("there are no coupons created yet.", 400));
   }
-  return res
+  return ao
     .status(200)
-    .json({ message: "done", count: coupons.length, coupons });
+    .json({ message: "done", page: req.query.page, coupons });
 });
 
 export const applyCoupon = errorHandler(
