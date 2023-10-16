@@ -117,10 +117,11 @@ export const deleteReview = async (req, res, next) => {
 
 export const getProductReviews = errorHandler(async (req, res, next) => {
   const { productId } = req.params;
-
+  const { search } = req.query;
   const apiFeaturesInstance = new ApiFeatures(
     reviewModel.find({
       productId,
+      reviewDisc: { $regex: search ? search : ".", $options: "i" },
     }),
     req.query
   )

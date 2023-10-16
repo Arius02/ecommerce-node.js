@@ -29,7 +29,10 @@ export const updateCoupon = errorHandler(async (req, res, next) => {
   if (!coupon) {
     return next(new AppError("coupon._id not exist", 401));
   }
-  if (coupon.createdBy.toString() !== _id.toString()) {
+  if (
+    coupon.createdBy.toString() !== _id.toString() &&
+    req.user.role != systemRoles.SUPER_ADMIN
+  ) {
     return next(new AppError(`you have no access to this coupon`, 401));
   }
   if (couponCode) {
@@ -58,7 +61,10 @@ export const deleteCoupon = errorHandler(async (req, res, next) => {
   if (!coupon) {
     return next(new AppError("couponId is not valid.", 400));
   }
-  if (coupon.createdBy.toString() !== _id.toString()) {
+  if (
+    coupon.createdBy.toString() !== _id.toString() &&
+    req.user.role != systemRoles.SUPER_ADMIN
+  ) {
     return next(new AppError(`you have no access to this coupon`, 401));
   }
   return res.status(200).json({ message: "done", coupon });
@@ -66,17 +72,14 @@ export const deleteCoupon = errorHandler(async (req, res, next) => {
 export const getAllCoupons = errorHandler(async (req, res, next) => {
   const { _id } = req.user;
   const { search } = req.query;
-  const options = { createdBy: _id };
+  let options = { createdBy: _id };
   if (req.user.role == systemRoles.SUPER_ADMIN) {
     options = {};
   }
   const apiFeaturesInstance = new ApiFeatures(
     couponModel.find({
       ...options,
-      $or: [
-        { name: { $regex: search ? search : ".", $options: "i" } },
-        { desc: { $regex: search ? search : ".", $options: "i" } },
-      ],
+      couponCode: { $regex: search ? search : ".", $options: "i" },
     }),
     req.query
   )
@@ -84,10 +87,8 @@ export const getAllCoupons = errorHandler(async (req, res, next) => {
     .filters()
     .sort();
   const coupons = await apiFeaturesInstance.mongooseQuery;
-  if (!coupons) {
-    return next(new AppError("there are no coupons created yet.", 400));
-  }
-  return ao
+
+  return res
     .status(200)
     .json({ message: "done", page: req.query.page, coupons });
 });
