@@ -19,8 +19,6 @@ export const getSingleCategory = errorHandler(async (req, res, next) => {
   const {
     subCategoryPage,
     subCategorySize,
-    brandPage,
-    brandSize,
     productPage,
     productSize,
   } = req.query;
@@ -30,10 +28,6 @@ export const getSingleCategory = errorHandler(async (req, res, next) => {
       size: subCategorySize,
     }
   );
-  const { skip: brandSkip, limit: brandLimit } = paginationFunction({
-    page: brandPage,
-    size: brandSize,
-  });
   const { skip: productSkip, limit: productLimit } = paginationFunction({
     page: productPage,
     size: productSize,
@@ -45,11 +39,6 @@ export const getSingleCategory = errorHandler(async (req, res, next) => {
       path: "subcategories",
       select: "name _id image",
       options: { skip: subCategorySkip, limit: subCategoryLimit },
-    },
-    {
-      path: "brands",
-      select: "name _id image",
-      options: { skip: brandSkip, limit: brandLimit },
     },
     {
       path: "products",
@@ -79,9 +68,7 @@ export const getAllClassifications = errorHandler(async (req, res, next) => {
   const classifications = await categoryModel.find().populate([
     {
       path: "subcategories",
-    },
-    {
-      path: "brands",
+      select:"name",
     },
   ]);
 

@@ -18,23 +18,14 @@ export const deleteSubCategory = errorHandler(async (req, res, next) => {
 });
 export const getSingleSubCategory = errorHandler(async (req, res, next) => {
   const { _id } = req.params;
-  const { brandPage, brandSize, productPage, productSize } = req.query;
+  const {  productPage, productSize } = req.query;
 
-  const { skip: brandSkip, limit: brandLimit } = paginationFunction({
-    page: brandPage,
-    size: brandSize,
-  });
   const { skip: productSkip, limit: productLimit } = paginationFunction({
     page: productPage,
     size: productSize,
   });
 
   const subCategory = await subCategoryModel.findById(_id).populate([
-    {
-      path: "brands",
-      select: "name _id image",
-      options: { skip: brandSkip, limit: brandLimit },
-    },
     {
       path: "products",
       select: "name _id coverImage",
