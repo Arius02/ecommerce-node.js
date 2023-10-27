@@ -33,23 +33,7 @@ const brandSchema = new Schema(
       type: mongoose.Types.ObjectId,
       ref: "User",
     },
-    customId: String,
-    category: {
-      categoryId: {
-        type: mongoose.Types.ObjectId,
-        ref: "Category",
-        required: true,
-      },
-      categoryCustomId: String,
-    },
-    subCategory: {
-      subCategoryId: {
-        type: mongoose.Types.ObjectId,
-        ref: "SubCategory",
-        required: true,
-      },
-      subCategoryCustomId: String,
-    },
+    customId:String
   },
   {
     timestamps: true,

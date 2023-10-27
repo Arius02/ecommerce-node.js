@@ -165,7 +165,6 @@ export const changePassword = errorHandler(async (req, res, next) => {
 // update 
 export const updateUser = errorHandler(async(req, res, next)=>{
   const {_id}=req.user
-  console.log(_id)
   const user= await userModel.findById(_id)
    if(req.body.email){
     if(user.email === req.body.email){

@@ -9,7 +9,7 @@ import { applyCoupon } from "../coupon/coupon.controller.js";
 function handleTotalPrice(cart){
   let totalPrice=0
   cart.products.forEach(elm=>totalPrice+=elm.priceAfterDiscount*elm.quantity)
-    cart.totalPrice=totalPrice
+    cart.totalPrice=totalPrice  
 }
 export const addToCart = errorHandler(async (req, res, next) => {
     const { _id } = req.user;

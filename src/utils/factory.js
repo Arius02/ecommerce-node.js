@@ -7,7 +7,7 @@ import { subCategoryModel } from "../../database/models/subCategory.model.js";
 import { brandModel } from "../../database/models/brand.model.js";
 import {
   handleDeleteImage,
-  handleSingleImagesUpdateAndDelete,
+  handleSingleImageUpdateAndDelete,
   handleUploadSingleImage,
 } from "./handleImages.js";
 import { productModel } from "../../database/models/product.model.js";
@@ -19,12 +19,12 @@ export const cloudindaryPath = (
   customId,
   categoryCustomId,
   subCategoryCustomId,
-  brandCustomId
+  
 ) => {
   if (itemName == "product") {
-    return `ecommerce/Categories/${categoryCustomId}/subCategories/${subCategoryCustomId}/Brands/${brandCustomId}/Products/${customId}`;
+    return `ecommerce/Categories/${categoryCustomId}/subCategories/${subCategoryCustomId}/Products/${customId}`;
   } else if (itemName == "brand") {
-    return `ecommerce/Categories/${categoryCustomId}/SubCategories/${subCategoryCustomId}/Brands/${customId}`;
+    return `ecommerce/Brands/${customId}`;
   } else if (itemName == "subCategory") {
     return `ecommerce/Categories/${categoryCustomId}/SubCategories/${customId}`;
   } else {
@@ -33,11 +33,11 @@ export const cloudindaryPath = (
 };
 // function for adding categories, subcategories, and brands
 export const addItem = async (Model, itemName, req, res, next) => {
-  const { name, categoryId, subCategoryId } = req.body;
+  const { name, categoryId } = req.body;
   const { _id } = req.user;
   let customIds = null;
-  let category, subCategory;
-  if (itemName == "brand" || itemName == "subCategory") {
+  let category;
+  if ( itemName == "subCategory") {
     customIds = {};
     category = await categoryModel.findById(categoryId);
     if (!category) {
@@ -45,23 +45,7 @@ export const addItem = async (Model, itemName, req, res, next) => {
     }
     customIds.categoryId = category.customId;
   }
-  if (itemName == "brand") {
-    subCategory = await subCategoryModel.findById(subCategoryId);
-    customIds.subCategoryId = subCategory.customId;
 
-    if (
-      !category ||
-      !subCategory ||
-      subCategory.category.categoryId.toHexString() !== categoryId
-    ) {
-      return next(
-        new AppError(
-          "invalid ids or the subCategory is not related to the selected category",
-          404
-        )
-      );
-    }
-  }
 
   if (!req.file) {
     return next(new AppError(`please upload a ${itemName} image`, 400));
@@ -77,7 +61,6 @@ export const addItem = async (Model, itemName, req, res, next) => {
     itemName,
     customId,
     customIds?.categoryId,
-    customIds?.subCategoryId
   );
   const { secure_url, public_id } = await handleUploadSingleImage(
     req.file.path,
@@ -93,9 +76,7 @@ export const addItem = async (Model, itemName, req, res, next) => {
     category: category
       ? { categoryId, categoryCustomId: category.customId }
       : undefined,
-    subCategory: subCategory
-      ? { subCategoryId, subCategoryCustomId: subCategory.customId }
-      : undefined,
+    
   };
 
   const newItem = await Model.create(itemData);
@@ -110,7 +91,7 @@ export const addItem = async (Model, itemName, req, res, next) => {
 // function for updating categories, subcategories, and brands
 export const updateItem = async (Model, itemName, req, res, next) => {
   const { _id } = req.params;
-  const { categoryId, subCategoryId } = req.body;
+  const { categoryId,  } = req.body;
   const item = await Model.findById(_id);
 
   if (!item) {
@@ -144,9 +125,8 @@ export const updateItem = async (Model, itemName, req, res, next) => {
       itemName,
       item.customId,
       item.category?.categoryCustomId,
-      item.subCategory?.subCategoryCustomId
     );
-    const { secure_url, public_id } = await handleSingleImagesUpdateAndDelete(
+    const { secure_url, public_id } = await handleSingleImageUpdateAndDelete(
       req.file.path,
       item.image.public_id,
       path
@@ -157,11 +137,6 @@ export const updateItem = async (Model, itemName, req, res, next) => {
   if (item.category) {
     item.category.categoryId = categoryId || item.category.categoryId;
   }
-  if (item.subCategory) {
-    item.subCategory.subCategoryId =
-      subCategoryId || item.subCategory.subCategoryI;
-  }
-
   item.updatedBy = req.user._id;
 
   await item.save();
@@ -171,7 +146,7 @@ export const updateItem = async (Model, itemName, req, res, next) => {
     .json({ message: `${itemName} updated successfully.`, item });
 };
 //TODO transaction -- done
-// function for deleting categories, subcategories, and brands
+// function for deleting categories, subcategories
 export const deleteItem = async (Model, itemName, req, res, next) => {
   const { _id } = req.params;
   let path;
@@ -181,41 +156,29 @@ export const deleteItem = async (Model, itemName, req, res, next) => {
   try {
     const item = await Model.findById(_id).session(session);
     if (!item) {
-      return next(new AppError("Item not found", 404)); // Handle this error appropriately
+      return next(new AppError("Item not found", 404)); 
     }
     if (item.createdBy.toString() !== req.user._id.toString()) {
       return next(new AppError(`you have no access to this ${itemName}`, 401));
     }
 
     await Model.deleteOne({ _id }).session(session);
+   
     if (itemName === "category") {
+
       await subCategoryModel
         .deleteMany({ "category.categoryId": _id })
         .session(session);
-      await brandModel
-        .deleteMany({ "category.categoryId": _id })
-        .session(session);
-
+    await productModel.deleteMany({ "category.categoryId": _id }).session(session);
       path = cloudindaryPath(itemName, item.customId);
     } else if (itemName === "subCategory") {
-      await brandModel
-        .deleteMany({ "subCategory.subCategoryId": _id })
-        .session(session);
-
+      await productModel.deleteMany({ "subCategory.subCategoryId": _id }).session(session);
       path = cloudindaryPath(
         itemName,
         item.customId,
         item.category.categoryCustomId
       );
-    } else {
-      path = cloudindaryPath(
-        itemName,
-        item.customId,
-        item.category.categoryCustomId,
-        item.subCategory.subCategoryCustomId
-      );
-    }
-    await productModel.deleteMany({ "brand.brandId": _id }).session(session);
+    } 
 
     // Commit the transaction
     await session.commitTransaction();

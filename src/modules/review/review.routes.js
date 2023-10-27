@@ -28,7 +28,7 @@ router
 router.delete(
   "/:reviewId",
   auth(),
-  allowTo([systemRoles.USER]),
+  // allowTo([systemRoles.USER]),
   validationCoreFunction(deleteReviewSchema),
   deleteReview
 );

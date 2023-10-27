@@ -23,7 +23,7 @@ export async function handleUploadBulkOfImages(files, path) {
   }
   return { images, IDs };
 }
-export async function handleSingleImagesUpdateAndDelete(file, id, path) {
+export async function handleSingleImageUpdateAndDelete(file, id, path) {
   await cloudinary.uploader.destroy(id);
   const { secure_url, public_id } = await cloudinary.uploader.upload(file, {
     folder: path,

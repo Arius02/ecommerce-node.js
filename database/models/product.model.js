@@ -85,13 +85,10 @@ const productSchema = new Schema(
       subCategoryCustomId: String,
     },
     brand: {
-      brandId: {
         type: mongoose.Types.ObjectId,
         ref: "Brand",
         required: true,
-      },
-      brandCustomId: String,
-    },
+      },   
     isDisabled: Boolean,
   },
   {

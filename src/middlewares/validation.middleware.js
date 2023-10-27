@@ -27,7 +27,6 @@ export const generalFields = {
 export const validationCoreFunction = (schema) => {
   return (req, res, next) => {
     // req
-    console.log(req.body)
     let validationErrorArr = []
     for (const key of reqMethods) {
       if (schema[key]) {

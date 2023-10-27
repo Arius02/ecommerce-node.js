@@ -10,7 +10,7 @@ import cloudinary from "../../services/cloudinary.js";
 import {
   handleDeleteImage,
   handleImagesUpdateAndDelete,
-  handleSingleImagesUpdateAndDelete,
+  handleSingleImageUpdateAndDelete,
   handleUploadBulkOfImages,
   handleUploadSingleImage,
 } from "../../utils/handleImages.js";
@@ -47,7 +47,7 @@ export const addProduct = errorHandler(async (req, res, next) => {
     customId,
     category.customId,
     subCategory.customId,
-    brand.customId
+    
   );
   const { secure_url, public_id } = await handleUploadSingleImage(
     req.files.coverImage[0].path,
@@ -70,7 +70,7 @@ export const addProduct = errorHandler(async (req, res, next) => {
     stock,
     category: { categoryId, categoryCustomId: category.customId },
     subCategory: { subCategoryId, subCategoryCustomId: subCategory.customId },
-    brand: { brandId, brandCustomId: brand.customId },
+    brand: brandId,
     customId,
     images,
     createdBy: _id,
@@ -120,16 +120,15 @@ export const updateProduct = async (req, res, next) => {
     product.subCategory.subCategoryId = subCategoryId;
   }
   if (brandId) {
-    const brandExists = await brandModel.findById(brandId || product.brandId);
+    const brandExists = await brandModel.findById(brandId || product.brand);
     if (!brandExists) {
       return next(new AppError("invalid brand", 400));
     }
-    product.brand.brandId = brandId;
+    product.brand = brandId;
   }
   const {
     category: { categoryCustomId },
     subCategory: { subCategoryCustomId },
-    brand: { brandCustomId },
     customId,
   } = product;
   const path = cloudindaryPath(
@@ -137,10 +136,9 @@ export const updateProduct = async (req, res, next) => {
     customId,
     categoryCustomId,
     subCategoryCustomId,
-    brandCustomId
   );
   if (req.files?.coverImage?.length) {
-    const { secure_url, public_id } = await handleSingleImagesUpdateAndDelete(
+    const { secure_url, public_id } = await handleSingleImageUpdateAndDelete(
       req.files.coverImage[0].path,
       product.coverImage.public_id,
       path
@@ -186,9 +184,8 @@ export const deleteProduct = errorHandler(async (req, res, next) => {
   const {
     category: { categoryCustomId },
     subCategory: { subCategoryCustomId },
-    brand: { brandCustomId },
   } = product;
-  const path = `ecommerce/Categories/${categoryCustomId}/subCategories/${subCategoryCustomId}/Brands/${brandCustomId}/Products/${product.customId}`;
+  const path = `ecommerce/Categories/${categoryCustomId}/subCategories/${subCategoryCustomId}/Products/${product.customId}`;
 
   await handleDeleteImage(path);
   res.status(200).json({ message: "product deleted successfully.", product });
@@ -199,7 +196,7 @@ export const getSingleProduct = async (req, res, next) => {
   const product = await productModel.findById(productId).populate([
     { path: "category.categoryId", select: "name " },
     { path: "subCategory.subCategoryId", select: "name " },
-    { path: "brand.brandId", select: "name " },
+    { path: "brand", select: "name " },
   ]);
 
   if (!product) {

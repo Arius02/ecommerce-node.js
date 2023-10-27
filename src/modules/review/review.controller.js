@@ -6,15 +6,7 @@ import { reviewModel } from "../../../database/models/review.model.js";
 import { ApiFeatures } from "../../utils/apiFeatures.js";
 import { systemRoles } from "../../utils/systemRoles.js";
 import { productModel } from "../../../database/models/product.model.js";
-const updateRating = (reviews, review) => {
-  if (reviews && reviews.length > 0) {
-    // Calculate the total rating by summing up all the ratings
-    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
 
-    // Update the totalRating in the document
-    review.totalRating = totalRating / reviews.length;
-  }
-};
 export const addReview = errorHandler(async (req, res, next) => {
   const { _id } = req.user;
   const { reviewDisc, rating, productId } = req.body;
@@ -128,7 +120,7 @@ export const getProductReviews = errorHandler(async (req, res, next) => {
     .pagination()
     .filters()
     .sort();
-  const reviews = await apiFeaturesInstance.mongooseQuery;
+  const reviews = await apiJFeaturesInstance.mongooseQuery;
 
   return res
     .status(200)
