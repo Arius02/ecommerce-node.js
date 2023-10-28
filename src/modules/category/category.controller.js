@@ -3,6 +3,7 @@ import errorHandler from "../../utils/errorHandler.js";
 import { addItem, deleteItem, updateItem } from "../../utils/factory.js";
 import { ApiFeatures } from "../../utils/apiFeatures.js";
 import { paginationFunction } from "../../utils/paginationFunction.js";
+import { brandModel } from "../../../database/models/brand.model.js";
 
 export const addCategory = async (req, res, next) => {
   await addItem(categoryModel, "category", req, res, next);
@@ -65,12 +66,16 @@ export const getAllCategories = errorHandler(async (req, res, next) => {
 });
 
 export const getAllClassifications = errorHandler(async (req, res, next) => {
+  const {isProduct} = req.query
   const classifications = await categoryModel.find().populate([
     {
       path: "subcategories",
-      select:"name",
+      select:"name ",
     },
-  ]);
-
-  res.status(200).json({ message: "Done", classifications });
+  ]).select("name ");
+  let brands;
+  if(isProduct){
+     brands= await brandModel.find().select("name")
+  }
+  res.status(200).json({ message: "Done", classifications,brands });
 });

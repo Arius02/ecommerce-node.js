@@ -7,7 +7,7 @@ export const addBrandSchema = {
       name: joi.string().min(2).max(40),
     })
     .required()
-    .options({ presence: "required" }),
+    
 };
 
 export const updateBrandSchema = {
