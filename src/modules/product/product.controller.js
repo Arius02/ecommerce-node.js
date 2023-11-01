@@ -212,7 +212,11 @@ export const getAllProducts = errorHandler(async (req, res, next) => {
         { name: { $regex: search ? search : ".", $options: "i" } },
         { desc: { $regex: search ? search : ".", $options: "i" } },
       ],
-    }),
+    }).populate([
+      { path: "category.categoryId", select: "name " },
+      { path: "subCategory.subCategoryId", select: "name " },
+      { path: "brand", select: "name " },
+    ]),
     req.query
   )
     .pagination()

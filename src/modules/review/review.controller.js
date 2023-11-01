@@ -126,3 +126,4 @@ export const getProductReviews = errorHandler(async (req, res, next) => {
     .status(200)
     .json({ message: "Done", page: req.query.page, reviews });
 });
+
