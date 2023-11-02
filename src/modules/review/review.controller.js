@@ -6,7 +6,6 @@ import { reviewModel } from "../../../database/models/review.model.js";
 import { ApiFeatures } from "../../utils/apiFeatures.js";
 import { systemRoles } from "../../utils/systemRoles.js";
 import { productModel } from "../../../database/models/product.model.js";
-
 export const addReview = errorHandler(async (req, res, next) => {
   const { _id } = req.user;
   const { reviewDisc, rating, productId } = req.body;
@@ -120,7 +119,7 @@ export const getProductReviews = errorHandler(async (req, res, next) => {
     .pagination()
     .filters()
     .sort();
-  const reviews = await apiJFeaturesInstance.mongooseQuery;
+  const reviews = await apiFeaturesInstance.mongooseQuery;
 
   return res
     .status(200)
