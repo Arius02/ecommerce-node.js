@@ -45,7 +45,11 @@ export const addReview = errorHandler(async (req, res, next) => {
     reviewDisc,
     rating,
   });
-
+  
+  const allReviews= await reviewModel.find({productId:productId}).select("rating")
+  const sum = allReviews.reduce((acc, review) => acc + review.rating, 0);
+  product.rating = sum / allReviews.length;
+  await product.save();
   return res.status(201).json({ message: "Done", review });
 });
 
@@ -74,6 +78,14 @@ export const updateReview = errorHandler(async (req, res, next) => {
       )
     );
   }
+  if(rating){
+      const allReviews = reviewModel
+        .find({ productId: productId })
+        .select("rating");
+      const sum = allReviews.reduce((acc, review) => acc + review.rating, 0);
+      product.rating = sum / allReviews.length;
+      await product.save();
+  }
   return res.status(200).json({ message: "Done", review });
 });
 
@@ -92,6 +104,12 @@ export const deleteReview = async (req, res, next) => {
       userId: _id,
     };
   }
+    const allReviews = reviewModel
+      .find({ productId: productId })
+      .select("rating");
+    const sum = allReviews.reduce((acc, review) => acc + review.rating, 0);
+    product.rating = sum / allReviews.length;
+    await product.save();
   // Find and delete the review based on reviewId and user's ID
   const review = await reviewModel.findOneAndDelete(options);
   if (!review) {

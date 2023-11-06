@@ -90,6 +90,7 @@ const productSchema = new Schema(
         required: true,
       },   
     isDisabled: Boolean,
+    rating:Number
   },
   {
     timestamps: true,
