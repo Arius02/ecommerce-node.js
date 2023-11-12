@@ -16,6 +16,7 @@ import {
 } from "../../utils/handleImages.js";
 import { cloudindaryPath, handlePrice } from "../../utils/factory.js";
 import { ApiFeatures } from "../../utils/apiFeatures.js";
+import { getTotalPages } from "../../utils/paginationFunction.js";
 
 export const addProduct = errorHandler(async (req, res, next) => {
   const {
@@ -204,13 +205,14 @@ export const getSingleProduct = async (req, res, next) => {
   }
   return res.status(200).json({ message: "Done", product });
 };
-export const getAllProducts = errorHandler(async (req, res, next) => {
-  const { search } = req.query;
+export const getAllProducts = (async (req, res, next) => {
+  const { search,size } = req.query;
   const apiFeaturesInstance = new ApiFeatures(
     productModel.find({
       $or: [
         { name: { $regex: search ? search : ".", $options: "i" } },
         { desc: { $regex: search ? search : ".", $options: "i" } },
+        { slug: { $regex: search ? search : ".", $options: "i" } },
       ],
     }).populate([
       { path: "category.categoryId", select: "name " },
@@ -224,7 +226,18 @@ export const getAllProducts = errorHandler(async (req, res, next) => {
     .sort()
     .select();
   const products = await apiFeaturesInstance.mongooseQuery;
-  res.status(200).json({ message: "Done", page: req.query.page, products });
+  const totalCount = await productModel
+    .countDocuments({
+      ...apiFeaturesInstance.mongooseQuery._conditions
+    })
+  res
+    .status(200)
+    .json({
+      message: "Done",
+      page: req.query.page,
+      totalPages: getTotalPages(totalCount,size),
+      products,
+    });
 });
 
 export const toggleDisabled = async (req, res, next) => {

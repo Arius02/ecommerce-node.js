@@ -4,6 +4,7 @@ import {
   addBrand,
   deleteBrand,
   getAllBrands,
+  getAllBrandsForOneSubCategory,
   getSinglebBrand,
   updateBrand,
 } from "./brand.controller.js";
@@ -43,8 +44,9 @@ router.delete(
 );
 router.get("/", getAllBrands);
 router.get(
-  "/:_id",
+  "/:search",
   validationCoreFunction(getSingleBrandSchema),
   getSinglebBrand
 );
+router.get("/filter/:subCategoryId", getAllBrandsForOneSubCategory);
 export default router;

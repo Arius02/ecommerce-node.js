@@ -33,6 +33,6 @@ export const deleteBrandSchema = {
 
 export const getSingleBrandSchema = {
   params: joi.object({
-    _id: generalFields._id,
+    search: joi.string().required(),
   }),
 };

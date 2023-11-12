@@ -6,7 +6,8 @@ import { reviewModel } from "../../../database/models/review.model.js";
 import { ApiFeatures } from "../../utils/apiFeatures.js";
 import { systemRoles } from "../../utils/systemRoles.js";
 import { productModel } from "../../../database/models/product.model.js";
-export const addReview = errorHandler(async (req, res, next) => {
+import { getTotalPages } from "../../utils/paginationFunction.js";
+export const addReview = async (req, res, next) => {
   const { _id } = req.user;
   const { reviewDisc, rating, productId } = req.body;
   const product = await productModel.findById(productId);
@@ -38,20 +39,22 @@ export const addReview = errorHandler(async (req, res, next) => {
   //   );
   // }
 
-  // create a new review
+  //  a new review
   let review = await reviewModel.create({
     productId,
     userId: _id,
     reviewDisc,
     rating,
   });
-  
-  const allReviews= await reviewModel.find({productId:productId}).select("rating")
+
+  const allReviews = await reviewModel
+    .find({ productId: productId })
+    .select("rating");
   const sum = allReviews.reduce((acc, review) => acc + review.rating, 0);
   product.rating = sum / allReviews.length;
   await product.save();
   return res.status(201).json({ message: "Done", review });
-});
+};
 
 export const updateReview = errorHandler(async (req, res, next) => {
   const { _id } = req.user;
@@ -78,13 +81,13 @@ export const updateReview = errorHandler(async (req, res, next) => {
       )
     );
   }
-  if(rating){
-      const allReviews = reviewModel
-        .find({ productId: productId })
-        .select("rating");
-      const sum = allReviews.reduce((acc, review) => acc + review.rating, 0);
-      product.rating = sum / allReviews.length;
-      await product.save();
+  if (rating) {
+    const allReviews = reviewModel
+      .find({ productId: productId })
+      .select("rating");
+    const sum = allReviews.reduce((acc, review) => acc + review.rating, 0);
+    product.rating = sum / allReviews.length;
+    await product.save();
   }
   return res.status(200).json({ message: "Done", review });
 });
@@ -104,12 +107,12 @@ export const deleteReview = async (req, res, next) => {
       userId: _id,
     };
   }
-    const allReviews = reviewModel
-      .find({ productId: productId })
-      .select("rating");
-    const sum = allReviews.reduce((acc, review) => acc + review.rating, 0);
-    product.rating = sum / allReviews.length;
-    await product.save();
+  const allReviews = reviewModel
+    .find({ productId: productId })
+    .select("rating");
+  const sum = allReviews.reduce((acc, review) => acc + review.rating, 0);
+  product.rating = sum / allReviews.length;
+  await product.save();
   // Find and delete the review based on reviewId and user's ID
   const review = await reviewModel.findOneAndDelete(options);
   if (!review) {
@@ -126,21 +129,32 @@ export const deleteReview = async (req, res, next) => {
 
 export const getProductReviews = errorHandler(async (req, res, next) => {
   const { productId } = req.params;
-  const { search } = req.query;
+  const { search,size } = req.query;
   const apiFeaturesInstance = new ApiFeatures(
-    reviewModel.find({
-      productId,
-      reviewDisc: { $regex: search ? search : ".", $options: "i" },
-    }),
+    reviewModel
+      .find({
+        productId,
+        reviewDisc: { $regex: search ? search : ".", $options: "i" },
+      })
+      .populate({
+        path: "userId",
+        select: "name",
+      }),
     req.query
   )
     .pagination()
     .filters()
     .sort();
   const reviews = await apiFeaturesInstance.mongooseQuery;
-
+  const totalCount = await reviewModel.countDocuments({
+    productId,
+    reviewDisc: { $regex: search ? search : ".", $options: "i" },
+  });
   return res
     .status(200)
-    .json({ message: "Done", page: req.query.page, reviews });
+    .json({
+      message: "Done",
+      totalPages: getTotalPages(totalCount, size),
+      reviews,
+    });
 });
-

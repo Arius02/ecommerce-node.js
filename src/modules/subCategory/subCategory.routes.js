@@ -43,7 +43,7 @@ router
     deleteSubCategory
   );
 router.get(
-  "/:_id",
+  "/:search",
   validationCoreFunction(getSingleSubCategorySchema),
   getSingleSubCategory
 );

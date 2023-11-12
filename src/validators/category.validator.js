@@ -32,6 +32,6 @@ export const deleteCategorySchema = {
 };
 export const getSingleCategorySchema = {
   params: joi.object({
-    _id: generalFields._id,
+    search: joi.string().required(),
   }),
 };

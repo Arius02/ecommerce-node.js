@@ -39,7 +39,8 @@ router
     validationCoreFunction(updateCategorySchema),
     updateCategory
   )
-  .get(validationCoreFunction(getSingleCategorySchema), getSingleCategory);
+
+router.get("/:search",validationCoreFunction(getSingleCategorySchema), getSingleCategory);
 
 router.delete(
   "/:_id",

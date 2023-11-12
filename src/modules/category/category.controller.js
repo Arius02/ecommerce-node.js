@@ -2,8 +2,10 @@ import { categoryModel } from "../../../database/models/categroy.model.js";
 import errorHandler from "../../utils/errorHandler.js";
 import { addItem, deleteItem, updateItem } from "../../utils/factory.js";
 import { ApiFeatures } from "../../utils/apiFeatures.js";
-import { paginationFunction } from "../../utils/paginationFunction.js";
+import { getTotalPages, paginationFunction } from "../../utils/paginationFunction.js";
 import { brandModel } from "../../../database/models/brand.model.js";
+import { subCategoryModel } from "../../../database/models/subCategory.model.js";
+import { productModel } from "../../../database/models/product.model.js";
 
 export const addCategory = async (req, res, next) => {
   await addItem(categoryModel, "category", req, res, next);
@@ -16,7 +18,7 @@ export const deleteCategory = async (req, res, next) => {
 };
 
 export const getSingleCategory = errorHandler(async (req, res, next) => {
-  const { _id } = req.params;
+  const { search } = req.params;
   const {
     subCategoryPage,
     subCategorySize,
@@ -35,7 +37,9 @@ export const getSingleCategory = errorHandler(async (req, res, next) => {
   });
 
   // check categoryId
-  const category = await categoryModel.findById(_id).populate([
+  const category = await categoryModel.findOne({
+      $or: [{ id: search }, { name: search }],
+    }).populate([
     {
       path: "subcategories",
       select: "name _id image",
@@ -43,17 +47,37 @@ export const getSingleCategory = errorHandler(async (req, res, next) => {
     },
     {
       path: "products",
-      select: "name _id coverImage",
+      select:
+        "name _id coverImage rating price priceAfterDiscount appliedDiscount stock",
       options: { skip: productSkip, limit: productLimit },
     },
   ]);
   if (!category) {
     return next(new AppError("invalid category id", 400));
   }
-  return res.status(200).json({ message: "Done", category });
+    const totalProductPageCount = await productModel
+    .countDocuments({
+      "category.categoryId":category._id
+    })
+    const totalSubCategoryPageCount = await subCategoryModel
+    .countDocuments({
+      "category.categoryId":category._id
+    })
+  res.status(200).json({
+    message: "Done",
+    totalProductPageCount: getTotalPages(
+      totalProductPageCount,
+      productSize
+    ),
+    totalSubCategoryPageCount: getTotalPages(
+      totalSubCategoryPageCount,
+      subCategorySize
+    ),
+    category,
+  });
 });
 export const getAllCategories = errorHandler(async (req, res, next) => {
-  const { search } = req.query;
+  const { search ,size} = req.query;
   const apiFeaturesInstance = new ApiFeatures(
     categoryModel.find({
       name: { $regex: search ? search : ".", $options: "i" },
@@ -62,7 +86,15 @@ export const getAllCategories = errorHandler(async (req, res, next) => {
   ).pagination();
 
   const categories = await apiFeaturesInstance.mongooseQuery;
-  res.status(200).json({ message: "Done", page: req.query.page, categories });
+   const totalCount = await categoryModel.countDocuments({
+     ...apiFeaturesInstance.mongooseQuery._conditions,
+   });
+   res.status(200).json({
+     message: "Done",
+     page: req.query.page,
+     totalPages: getTotalPages(totalCount,size),
+     categories,
+   });
 });
 
 export const getAllClassifications = errorHandler(async (req, res, next) => {

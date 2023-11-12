@@ -44,7 +44,7 @@ const brandSchema = new Schema(
 brandSchema.virtual("products", {
   ref: "Product",
   localField: "_id",
-  foreignField: "brand.brandId",
+  foreignField: "brand",
 });
 
 export const brandModel = model("Brand", brandSchema);

@@ -34,6 +34,6 @@ export const deleteSubCategorySchema = {
 };
 export const getSingleSubCategorySchema = {
   params: joi.object({
-    _id: generalFields._id,
+    search:joi.string().required(),
   }),
 };

@@ -37,7 +37,12 @@ export class ApiFeatures {
         (operator) => `$${operator}`
       )
     );
+    if (queryFilter.rating&&queryFilter.rating["$in"]) {
+      queryFilter.rating["$in"] = JSON.parse(queryFilter.rating["$in"]);
+    }
     this.mongooseQuery.find(queryFilter);
     return this;
   }
+
+
 }
