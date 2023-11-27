@@ -40,15 +40,16 @@ export const addProduct = errorHandler(async (req, res, next) => {
     return next(new AppError("please upload alll product images."));
   }
   const priceAfterDiscount = price * (1 - (appliedDiscount || 1) / 100);
-  const slug = slugify(name, "-");
+  const slug = `${slugify(name, "-")}-${category.name}-${subCategory.name}-${
+    brand.name
+  }`;
   const customId = nanoid();
   const publicIds = [];
   const path = cloudindaryPath(
     "product",
     customId,
     category.customId,
-    subCategory.customId,
-    
+    subCategory.customId
   );
   const { secure_url, public_id } = await handleUploadSingleImage(
     req.files.coverImage[0].path,
@@ -136,7 +137,7 @@ export const updateProduct = async (req, res, next) => {
     "product",
     customId,
     categoryCustomId,
-    subCategoryCustomId,
+    subCategoryCustomId
   );
   if (req.files?.coverImage?.length) {
     const { secure_url, public_id } = await handleSingleImageUpdateAndDelete(
@@ -163,7 +164,9 @@ export const updateProduct = async (req, res, next) => {
   handlePrice(appliedDiscount, price, product);
   if (name) {
     product.name = name;
-    product.slug = slugify(name, "-");
+    product.slug = `${slugify(name, "-")}-${category.name}-${
+      subCategory.name
+    }-${brand.name}`;
   }
   if (desc) product.desc = desc;
   if (stock) product.stock = stock;
@@ -205,20 +208,25 @@ export const getSingleProduct = async (req, res, next) => {
   }
   return res.status(200).json({ message: "Done", product });
 };
-export const getAllProducts = (async (req, res, next) => {
-  const { search,size } = req.query;
+export const getAllProducts = async (req, res, next) => {
+  // not the best solution
+  const { search, size, isUser } = req.query;
+  const option = isUser ? { isDisabled: false } : {};
   const apiFeaturesInstance = new ApiFeatures(
-    productModel.find({
-      $or: [
-        { name: { $regex: search ? search : ".", $options: "i" } },
-        { desc: { $regex: search ? search : ".", $options: "i" } },
-        { slug: { $regex: search ? search : ".", $options: "i" } },
-      ],
-    }).populate([
-      { path: "category.categoryId", select: "name " },
-      { path: "subCategory.subCategoryId", select: "name " },
-      { path: "brand", select: "name " },
-    ]),
+    productModel
+      .find({
+        $or: [
+          { name: { $regex: search ? search : ".", $options: "i" } },
+          { desc: { $regex: search ? search : ".", $options: "i" } },
+          { slug: { $regex: search ? search : ".", $options: "i" } },
+        ],
+        ...option,
+      })
+      .populate([
+        { path: "category.categoryId", select: "name " },
+        { path: "subCategory.subCategoryId", select: "name " },
+        { path: "brand", select: "name " },
+      ]),
     req.query
   )
     .pagination()
@@ -226,22 +234,19 @@ export const getAllProducts = (async (req, res, next) => {
     .sort()
     .select();
   const products = await apiFeaturesInstance.mongooseQuery;
-  const totalCount = await productModel
-    .countDocuments({
-      ...apiFeaturesInstance.mongooseQuery._conditions
-    })
-  res
-    .status(200)
-    .json({
-      message: "Done",
-      page: req.query.page,
-      totalPages: getTotalPages(totalCount,size),
-      products,
-    });
-});
+  const totalCount = await productModel.countDocuments({
+    ...apiFeaturesInstance.mongooseQuery._conditions,
+  });
+  res.status(200).json({
+    message: "Done",
+    page: req.query.page,
+    totalPages: getTotalPages(totalCount, size),
+    products,
+  });
+};
 
 export const toggleDisabled = async (req, res, next) => {
-  const { productId } = req.params;
+  const { productId } = req.body;
   const product = await productModel.findById(productId);
   product.isDisabled = !product.isDisabled;
   await product.save();

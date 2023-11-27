@@ -3,6 +3,7 @@ import {
   addReview,
   deleteReview,
   getProductReviews,
+  isAllowToRev,
   updateReview,
 } from "./review.controller.js";
 import { validationCoreFunction } from "../../middlewares/validation.middleware.js";
@@ -37,5 +38,6 @@ router.get(
   validationCoreFunction(getProductReviewsSchema),
   getProductReviews
 );
+router.get("/allow", auth(), isAllowToRev);
 
 export default router;

@@ -37,27 +37,27 @@ function generateCustomerInformation(doc, invoice) {
 
   doc
     .fontSize(10)
-    .text('Order Code:', 50, customerInformationTop)
-    .font('Helvetica-Bold')
+    .text("Order Code:", 50, customerInformationTop)
+    .font("Helvetica-Bold")
     .text(invoice.orderCode, 150, customerInformationTop)
-    .font('Helvetica')
-    .text('Invoice Date:', 50, customerInformationTop + 30)
+    .font("Helvetica")
+    .text("Invoice Date:", 50, customerInformationTop + 30)
     .text(formatDate(new Date(invoice.date)), 150, customerInformationTop + 30)
-    .font('Helvetica-Bold')
+    .font("Helvetica-Bold")
     .text(invoice.shipping.name, 300, customerInformationTop)
-    .font('Helvetica')
+    .font("Helvetica")
     .text(invoice.shipping.address, 300, customerInformationTop + 15)
     .text(
-      invoice.shipping.town +
-        ', ' +
-        invoice.shipping.city +
-        ', ' +
+      invoice.shipping.city +
+        ", " +
+        invoice.shipping.governorate +
+        ", " +
         invoice.shipping.country,
       300,
-      customerInformationTop + 30,
+      customerInformationTop + 30
     )
-    
-    .moveDown()
+
+    .moveDown();
 
   generateHr(doc, 252)
 }

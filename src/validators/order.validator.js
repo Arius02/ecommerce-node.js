@@ -26,10 +26,9 @@ export const cancelOrderSchema = {
 
 export const updateOrderStatusSchema= {
   params:Joi.object({
-    productId:generalFields._id,
+    orderId:generalFields._id,
   }).required(),
   body: Joi.object({
-  reason: Joi.string().min(4).max(55).required(),
-  orderStatus:Joi.string().valid('shipped', 'delivered', 'canceled')
+  orderStatus:Joi.string().valid('shipped', 'delivered', 'processing', )
 }).required()
 }

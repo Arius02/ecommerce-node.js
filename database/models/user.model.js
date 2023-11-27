@@ -24,39 +24,52 @@ const userSchema = new Schema(
     role: {
       type: String,
       default: systemRoles.USER,
-      enum: [systemRoles.USER, systemRoles.ADMIN, systemRoles.SUPER_ADMIN, systemRoles.DELIVERY_MAN],
+      enum: [
+        systemRoles.USER,
+        systemRoles.ADMIN,
+        systemRoles.SUPER_ADMIN,
+        systemRoles.DELIVERY_MAN,
+      ],
     },
-    phoneNumbers: [String],
-    address: [{city:String,
-        town:String,
-        street:String,
-      isSelected:{
-        type:Boolean,
-        default:false
-      } }],
+    deliveryDetails: {
+      type: [
+        {
+          governorate: String,
+          city: String,
+          street: String,
+          isSelected: {
+            type: Boolean,
+            default: false,
+          },
+          phone: String,
+        },
+      ],
+      required: false,
+    },
 
     status: {
       type: String,
-      default: 'Offline',
-      enum: ['Online', 'Offline','Blooked'],
+      default: "Offline",
+      enum: ["Online", "Offline", "Blooked"],
     },
     gender: {
       type: String,
-      default: 'Not specified',
-      enum: ['male', 'female', 'Not specified'],
+      default: "Not specified",
+      enum: ["Male", "Female", "Not specified"],
     },
+    birth: String,
     age: Number,
     forgetCode: String,
-    passwordChangedAt:Date,
-    wishlist:[{type:mongoose.Types.ObjectId,ref:"product"}],
-    provider:{
-      type:String,
-      enum:["system","google"],
-      default:"system"
-    }
+    passwordChangedAt: Date,
+    wishlist: [{ type: mongoose.Types.ObjectId, ref: "product" }],
+    provider: {
+      type: String,
+      enum: ["system", "google"],
+      default: "system",
+    },
   },
-  { timestamps: true },
-)
+  { timestamps: true }
+);
 
 
 export const userModel = model('User', userSchema)

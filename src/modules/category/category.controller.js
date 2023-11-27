@@ -83,7 +83,9 @@ export const getAllCategories = errorHandler(async (req, res, next) => {
       name: { $regex: search ? search : ".", $options: "i" },
     }),
     req.query
-  ).pagination();
+  ).pagination()
+  .sort()
+  .filters();
 
   const categories = await apiFeaturesInstance.mongooseQuery;
    const totalCount = await categoryModel.countDocuments({

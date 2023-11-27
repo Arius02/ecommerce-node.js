@@ -51,6 +51,13 @@ router
     validationCoreFunction(deleteProductSchema),
     deleteProduct
   )
-  .get(validationCoreFunction(generalProductSchema), getSingleProduct)
-  .patch(validationCoreFunction(generalProductSchema), toggleDisabled);
+  .get(validationCoreFunction(generalProductSchema), getSingleProduct);
+
+router.patch(
+  "/visibility/",
+  auth(),
+  allowTo([systemRoles.SUPER_ADMIN, systemRoles.ADMIN]),
+  validationCoreFunction(generalProductSchema),
+  toggleDisabled
+);
 export default router;

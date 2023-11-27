@@ -12,17 +12,15 @@ const validationObjectId = (value, helper) => {
   
 }
 export const generalFields = {
-  email: joi
-    .string()
-    .email({ tlds: { allow: ['com', 'net', 'org'] } }),
+  email: joi.string().email({ tlds: { allow: ["com", "net", "org"] } }),
   password: joi
     .string()
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)
     .messages({
-      'string.pattern.base': 'Password regex fail',
+      "string.pattern.base": "Password regex fail",
     }),
   _id: joi.string().custom(validationObjectId),
-}
+};
 
 export const validationCoreFunction = (schema) => {
   return (req, res, next) => {

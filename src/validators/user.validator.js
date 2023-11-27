@@ -16,21 +16,21 @@ export const signUpSchema = {
       rePassword: Joi.ref("password"),
       phoneNumbers:Joi.array()
       .items(Joi.string().regex(/^(01[0-2]|015)\d{8}$/))
-      .required(),
+      .optional(),
       address:Joi.array().items(
         Joi.object({
           city: Joi.string().required(),
           town: Joi.string().required(),
           street: Joi.string().required(),
         })
-      ).required(),
+      ).optional(),
         gender: Joi.string()
         .pattern(/male|female/)
         .optional(),  
         age:Joi.number()
         .min(16)
         .max(80)
-        .required(),
+        .optional(),
     }) 
 };
 
@@ -62,20 +62,19 @@ export const changePassSchema = {
 };
 
 export const updateUserSchema = {
-  body: Joi.object(
-   { name: Joi.string()
-        .min(3)
-        .max(40)
-        ,
-      email: generalFields.email,
-        gender: Joi.string()
-        .pattern(/male|female/)
-        .optional(),  
-        age:Joi.number()
-        .min(16)
-        .max(80)
-        ,
-    }
-  ).optional().min(1)
+  body: Joi.object({
+    name: Joi.string().min(3).max(40),
+    email: generalFields.email,
+    gender: Joi.string()
+      .pattern(/male|female/)
+      .optional(),
+    gender: Joi.string()
+      .pattern(/Male|Female/)
+      .optional(),
+    birth: Joi.string()
+      .optional(),
+  })
+    .optional()
+    .min(1),
 };
 

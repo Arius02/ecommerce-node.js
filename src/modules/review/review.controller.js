@@ -134,7 +134,6 @@ export const getProductReviews = errorHandler(async (req, res, next) => {
     reviewModel
       .find({
         productId,
-        reviewDisc: { $regex: search ? search : ".", $options: "i" },
       })
       .populate({
         path: "userId",
@@ -143,7 +142,6 @@ export const getProductReviews = errorHandler(async (req, res, next) => {
     req.query
   )
     .pagination()
-    .filters()
     .sort();
   const reviews = await apiFeaturesInstance.mongooseQuery;
   const totalCount = await reviewModel.countDocuments({
@@ -158,3 +156,34 @@ export const getProductReviews = errorHandler(async (req, res, next) => {
       reviews,
     });
 });
+
+// for ui to not show add review section if user not allowed
+export const isAllowToRev= errorHandler(async (req, res, next) => {
+  const { productId } = req.params;
+  const { _id } = req.user;
+  let isOrdered = await orderModel.findOne({
+    userId: _id,
+    "products.productId": productId,
+    status: "delivered",
+  });
+  
+  if (!isOrdered) {
+    return next(new AppError("You have not ordered this product yet.", 400));
+  }
+  let IsReviewed;
+if (isOrdered) {
+  IsReviewed = await reviewModel.findOne({
+    productId,
+    userId: _id,
+  });
+  if (IsReviewed) {
+    return next(
+      new AppError("You have already reviewed this product before.", 400)
+    );
+  }
+}
+  return res.status(200).json({
+    message: "Done",
+    isAllowToRev: !IsReviewed,
+  })
+})

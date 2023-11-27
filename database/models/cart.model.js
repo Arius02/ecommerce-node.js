@@ -4,7 +4,6 @@ const cartSchema = new Schema({
     userId:{
         type:mongoose.Types.ObjectId,
         ref:"User",
-        required:true
     },
     products: [
         {
@@ -26,7 +25,10 @@ const cartSchema = new Schema({
     ],
     totalPrice:Number,
     priceAfterDiscount:Number,
-    coupon:mongoose.Types.ObjectId
+    coupon:{
+      type:mongoose.Types.ObjectId,
+      ref:"coupon"
+    }
 },{
     timestamps:true
 })

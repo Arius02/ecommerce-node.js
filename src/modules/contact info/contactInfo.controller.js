@@ -1,60 +1,76 @@
 import { userModel } from "../../../database/models/user.model.js";
-import { addInfo } from "../../utils/factory.js";
 import errorHandler from "../../utils/errorHandler.js";
 
-// adress and phoneNumbers 
-export const addUserContactInfo = errorHandler(async(req,res,next)=>{
-    const {address, phoneNumber}= req.body
-    const {_id}= req.user
-    if(address){
-     return addInfo(_id, req.user.address, address, 'Addresses', 'address', userModel, next, res);
-    }else{
-     return  addInfo(_id, req.user.phoneNumbers, phoneNumber, 'Phone Numbers', 'phoneNumbers', userModel, next, res);
-    }  
-  })
-  export const updateUserContactInfo = errorHandler(async(req,res,next)=>{
-    const {address, id}= req.body
-    const {_id}= req.user
-    let user ;
-    if(address){
-       await userModel.findByIdAndUpdate(_id,{
-        $pull:{address:{_id:id}},
-      },{new:true})
-      user = await userModel.findByIdAndUpdate(_id,{
-        $push:{address:req.body.address}
-      },{new:true})
-    }else{
-       //TODO updating phone numbers
-    }  
-    return res.status(201).json({message:"Done",user})
-  })
-  export const deleteUserContactInfo = errorHandler(async(req,res,next)=>{
-    const {phoneNumber, id}= req.body
-    const {_id}= req.user
-    let user ;
-    if(id){
-       user= await userModel.findByIdAndUpdate(_id,{
-        $pull:{address:{_id:id}},
-      },{new:true})
-    }else{
-      user= await userModel.findByIdAndUpdate(_id,{
-        $pull:{phoneNumbers:phoneNumber},
-      },{new:true})  }  
-    return res.status(201).json({message:"Done",user})
-  })
-  export const setDeliveryAddress=errorHandler(async(req,res,next)=>{
-    const { id}= req.params
-    const {_id}= req.user
-    const addresses= await  userModel.findById(_id).select("address -_id")
-    for (const obj of addresses.address) {
-      if(obj.isSelected){
-        obj.isSelected= false
-      }else if(obj._id.toString()== id.toString()){
-        obj.isSelected= true
-      }
+// adress and phoneNumbers
+export const addUserContactInfo = (async (req, res, next) => {
+    const { _id } = req.user;
+
+    const user = await userModel.findById(_id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
-    await userModel.findByIdAndUpdate(_id,{
-      address:addresses.address
-    })
-    return res.status(201).json({message:"Done"})
-  })
+
+    // Reset isSelected 
+    user.deliveryDetails.forEach((element) => {
+      element.isSelected = false;
+    });
+
+    // Add new contact info and set isSelected to true
+    user.deliveryDetails.push({ ...req.body, isSelected: true });
+
+    // Save the updated user
+    await user.save();
+
+    return res.status(201).json({ message: "Done" });
+
+});
+
+
+// export const updateUserContactInfo = errorHandler(async(req,res,next)=>{
+//   const {id}= req.body
+//   const {_id}= req.user
+//   await userModel.findOneAndUpdate(_id,{
+
+//   })
+//   return res.status(201).json({message:"Done"})
+// })
+
+export const deleteUserContactInfo = errorHandler(async (req, res, next) => {
+  const { id } = req.params;
+  const { _id } = req.user;
+
+  const user = await userModel.findByIdAndUpdate(
+    _id,
+    {
+      $pull: { deliveryDetails: { _id: id } },
+    },
+    { new: true }
+  );
+  if (!user) {
+    return next(new AppError("an error eccoured please try again.", 400));
+  }
+  return res.status(201).json({ message: "Done" });
+});
+export const setDeliveryAddress = errorHandler(async (req, res, next) => {
+    const { id } = req.body;
+    const { _id } = req.user;
+
+    // Retrieve the user and select only the deliveryDetails
+    const user = await userModel.findById(_id).select("deliveryDetails");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update isSelected based on the provided id
+    user.deliveryDetails.forEach((obj) => {
+      obj.isSelected = obj._id.toString() === id.toString();
+    });
+
+    // Save the updated user with modified deliveryDetails
+    await user.save();
+
+    return res.status(201).json({ message: "Done" });
+
+});

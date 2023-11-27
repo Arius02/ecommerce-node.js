@@ -93,7 +93,7 @@ export const getAllCoupons = errorHandler(async (req, res, next) => {
     .json({ message: "done", page: req.query.page, coupons });
 });
 
-export const applyCoupon = errorHandler(
+export const applyCoupon = 
   async (req, res, next, model, modelName) => {
     const { couponCode } = req.body;
     const { _id } = req.user;
@@ -139,7 +139,7 @@ export const applyCoupon = errorHandler(
       return { message, cause };
     }
   }
-);
+
 
 export const toggleDisabled = async (req, res, next) => {
   const { _id } = req.params;
