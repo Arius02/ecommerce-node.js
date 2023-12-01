@@ -50,7 +50,7 @@ export const getSinglebBrand = async (req, res, next) => {
   });
   const brand = await brandModel
     .findOne({
-      $or: [{ id: search }, { name: search }],
+      $or: [{ _id: search }, { name: search }],
     })
     .populate({
       path: "products",

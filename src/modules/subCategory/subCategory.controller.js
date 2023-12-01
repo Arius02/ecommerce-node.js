@@ -25,10 +25,10 @@ export const getSingleSubCategory = errorHandler(async (req, res, next) => {
     page: productPage,
     size: productSize,
   });
-
+console.log(search)
   const subCategory = await subCategoryModel
     .findOne({
-      $or: [{ id: search }, { name: search }],
+      $or: [{ _id: search }, { name: search }],
     })
     .populate([
       {

@@ -6,6 +6,7 @@ import { getTotalPages, paginationFunction } from "../../utils/paginationFunctio
 import { brandModel } from "../../../database/models/brand.model.js";
 import { subCategoryModel } from "../../../database/models/subCategory.model.js";
 import { productModel } from "../../../database/models/product.model.js";
+import { AppError } from "../../utils/AppErorr.js";
 
 export const addCategory = async (req, res, next) => {
   await addItem(categoryModel, "category", req, res, next);
@@ -38,7 +39,7 @@ export const getSingleCategory = errorHandler(async (req, res, next) => {
 
   // check categoryId
   const category = await categoryModel.findOne({
-      $or: [{ id: search }, { name: search }],
+      $or: [{ _id: search }, { name: search }],
     }).populate([
     {
       path: "subcategories",
