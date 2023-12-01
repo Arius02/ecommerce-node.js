@@ -13,6 +13,7 @@ import { sendEmail } from "../../services/sendingMails.js";
 import { nanoid } from "nanoid";
 import { ApiFeatures } from "../../utils/apiFeatures.js";
 import { getTotalPages } from "../../utils/paginationFunction.js";
+import { systemRoles } from "../../utils/systemRoles.js";
 
 const sendOrderPdfToUser = async (name, email, address, order) => {
   const orderCode = `${name}_${nanoid(3)}`;
@@ -41,7 +42,7 @@ const sendOrderPdfToUser = async (name, email, address, order) => {
     couponDiscount,
   };
   createInvoice(orderinvoice, `${orderCode}.pdf`);
-  const isEmailSent = await sendEmail({
+   await sendEmail({
     to: email,
     subject: "Order Confirmation",
     html: `<h1>please find your invoice attachment below</h1>`,
@@ -303,7 +304,7 @@ export const getAllUserOrders = errorHandler(async (req, res, next) => {
 export const getUserOrder = errorHandler(async (req, res, next) => {
   const { _id } = req.params;
    const condition =
-     req.user.role === "SuperAdmin" || req.user.role === "Admin"
+     req.user.role !== systemRoles.User 
        ? { _id: req.params._id }
        : {_id, userId: req.user._id };
   const order = await orderModel

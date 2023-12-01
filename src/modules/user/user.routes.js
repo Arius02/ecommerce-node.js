@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   changePassword,
+  changeUserRole,
   deleteUser,
   forgetPassword,
   getAllUsers,
@@ -33,13 +34,18 @@ router.patch(
   resetPassword
 );
 router.patch(
-  "/changePassword/",
+  "/changePassword",
   auth(),
-  allowTo([systemRoles.USER]),
+
   validationCoreFunction(changePassSchema),
   changePassword
 );
-router.patch("/logout", auth(), allowTo([systemRoles.USER]), logOut);
+router.patch(
+  "/logout",
+  auth(),
+  
+  logOut
+);
 router
   .route("/")
   .put(
@@ -48,12 +54,12 @@ router
     validationCoreFunction(updateUserSchema),
     updateUser
   )
-  .get(auth(), allowTo([systemRoles.USER]), getUser)
+  .get(auth(), getUser)
   .delete(auth(), allowTo([systemRoles.USER]), deleteUser);
 router.get(
   "/allUsers",
   auth(),
-  allowTo([systemRoles.SUPER_ADMIN, systemRoles.ADMIN]),
+  allowTo([systemRoles.SUPER_ADMIN, systemRoles.ADMIN, systemRoles.FAKE_ADMIN]),
   getAllUsers
 );
 router.patch(
@@ -61,5 +67,11 @@ router.patch(
   auth(),
   allowTo([systemRoles.SUPER_ADMIN, systemRoles.ADMIN]),
   toggleBlock
+);
+router.patch(
+  "/changeRole",
+  auth(),
+  allowTo([systemRoles.SUPER_ADMIN]),
+  changeUserRole
 );
 export default router;

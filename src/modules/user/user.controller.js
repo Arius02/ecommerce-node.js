@@ -8,6 +8,7 @@ import { nanoid } from "nanoid";
 import { AppError } from "../../utils/AppErorr.js";
 import { ApiFeatures } from "../../utils/apiFeatures.js";
 import { getTotalPages } from "../../utils/paginationFunction.js";
+import { systemRoles } from "../../utils/systemRoles.js";
 
 //TODO Google sign
 //signUp
@@ -251,7 +252,7 @@ $or: [
       {"deliveryDetails.phone": { $regex: search ? search : ".", $options: "i" }},
       {email: { $regex: search ? search : ".", $options: "i" }},
 ]
-    }).select("name email deliveryDetails status"),
+    }).select("name email deliveryDetails status role"),
     req.query
   )
     .pagination()
@@ -277,3 +278,15 @@ export const toggleBlock=errorHandler(async (req, res, next) => {
   });
   return res.status(201).json({ message: "Done" });
 })
+
+export const changeUserRole= errorHandler(async (req,res,next)=>{
+  const {role,userId}=req.body
+  if(req.user.role!==systemRoles.SUPER_ADMIN){
+    return next(new AppError("you are not authorized to perform this action",401))
+  };
+
+  await userModel.findByIdAndUpdate(userId,{
+    role
+  })
+  return res.status(201).json({message:"Done"})
+}) 

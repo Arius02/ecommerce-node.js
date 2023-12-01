@@ -24,7 +24,7 @@ const router = Router();
 router.post(
   "/:cartId",
   auth(),
-  allowTo([systemRoles.USER]),
+  allowTo([systemRoles.USER, systemRoles.FAKE_ADMIN]),
   validationCoreFunction(createOrderSchema),
   createCashOrder
 );
@@ -32,7 +32,7 @@ router.post(
 router.post(
   "/checkoutSession/:cartId",
   auth(),
-  allowTo([systemRoles.USER]),
+  allowTo([systemRoles.USER, systemRoles.FAKE_ADMIN]),
   validationCoreFunction(createOrderSchema),
   checkoutSession
 );
@@ -40,7 +40,7 @@ router.post(
 router.post(
   "/create/directCashOrder",
   auth(),
-  allowTo([systemRoles.USER]),
+  allowTo([systemRoles.USER, systemRoles.FAKE_ADMIN]),
   validationCoreFunction(createDirectOrderSchema),
   createDirectCashOrder
 );
@@ -48,7 +48,7 @@ router.post(
 router.post(
   "/create/directOnlineOrder",
   auth(),
-  allowTo([systemRoles.USER]),
+  allowTo([systemRoles.USER, systemRoles.FAKE_ADMIN]),
   validationCoreFunction(createDirectOrderSchema),
   createDirectOnlineOrder
 );
@@ -81,19 +81,17 @@ router.patch(
 router.get(
   "/",
   auth(),
-  allowTo([systemRoles.SUPER_ADMIN, systemRoles.ADMIN, systemRoles.USER]),
   getAllUserOrders
 );
 router.get(
   "/:_id",
   auth(),
-  allowTo([systemRoles.SUPER_ADMIN, systemRoles.ADMIN, systemRoles.USER]),
   getUserOrder
 );
 router.get(
   "/admin/getAllOrders",
   auth(),
-  allowTo([systemRoles.SUPER_ADMIN, systemRoles.ADMIN]),
+  allowTo([systemRoles.SUPER_ADMIN, systemRoles.ADMIN, systemRoles.FAKE_ADMIN]),
   getAllOrders
 );
 export default router;

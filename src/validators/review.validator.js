@@ -18,6 +18,7 @@ export const updateReviewSchema = {
 export const deleteReviewSchema = {
   params: Joi.object({
     reviewId: generalFields._id.required(),
+    productId: generalFields._id.required(),
   }),
 };
 

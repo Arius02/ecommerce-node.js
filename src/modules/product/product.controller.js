@@ -232,7 +232,6 @@ export const getAllProducts = async (req, res, next) => {
     .pagination()
     .filters()
     .sort()
-    .select();
   const products = await apiFeaturesInstance.mongooseQuery;
   const totalCount = await productModel.countDocuments({
     ...apiFeaturesInstance.mongooseQuery._conditions,

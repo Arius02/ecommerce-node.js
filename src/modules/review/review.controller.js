@@ -15,29 +15,29 @@ export const addReview = async (req, res, next) => {
     return next(new AppError("productId is required", 4004));
   }
   // Check if the user has purchased the product before allowing a review
-  // const allowRev = await orderModel.findOne({
-  //   userId: _id,
-  //   "products.productId": productId,
-  //   // status: "delivered"
-  // });
+  const allowRev = await orderModel.findOne({
+    userId: _id,
+    "products.productId": productId,
+    status: "delivered"
+  });
 
-  // if (!allowRev) {
-  //   return next(
-  //     new AppError("You must buy this product before reviewing it.", 401)
-  //   );
-  // }
+  if (!allowRev) {
+    return next(
+      new AppError("You must buy this product before reviewing it.", 401)
+    );
+  }
 
   // Check if the user has already reviewed this product
-  // const isRevBefore = await reviewModel.findOne({
-  //   productId,
-  //   "userId": _id,
-  // });
+  const isRevBefore = await reviewModel.findOne({
+    productId,
+    "userId": _id,
+  });
 
-  // if (isRevBefore) {
-  //   return next(
-  //     new AppError("You have already reviewed this product before.", 400)
-  //   );
-  // }
+  if (isRevBefore) {
+    return next(
+      new AppError("You have already reviewed this product before.", 400)
+    );
+  }
 
   //  a new review
   let review = await reviewModel.create({
@@ -58,7 +58,7 @@ export const addReview = async (req, res, next) => {
 
 export const updateReview = errorHandler(async (req, res, next) => {
   const { _id } = req.user;
-  const { reviewId, reviewDisc, rating } = req.body;
+  const { reviewId, rating } = req.body;
 
   // Find the review based on reviewId and user's ID
   const review = await reviewModel.findOneAndUpdate(
@@ -67,10 +67,8 @@ export const updateReview = errorHandler(async (req, res, next) => {
       userId: _id,
     },
     {
-      reviewDisc,
-      rating,
+      ...req.body
     },
-    { new: true } // Return the updated document
   );
 
   if (!review) {
@@ -81,20 +79,21 @@ export const updateReview = errorHandler(async (req, res, next) => {
       )
     );
   }
+  const product =await  productModel.findById(review.productId);
   if (rating) {
-    const allReviews = reviewModel
-      .find({ productId: productId })
+    const allReviews =await  reviewModel
+      .find({ productId: review.productId })
       .select("rating");
     const sum = allReviews.reduce((acc, review) => acc + review.rating, 0);
     product.rating = sum / allReviews.length;
     await product.save();
   }
-  return res.status(200).json({ message: "Done", review });
+  return res.status(200).json({ message: "Done" });
 });
 
 export const deleteReview = async (req, res, next) => {
   const { _id, role } = req.user;
-  const { reviewId } = req.params;
+  const { reviewId, productId } = req.params;
   let options;
   //to give admin the premmision to delete any review
   if (role == systemRoles.ADMIN || role == systemRoles.SUPER_ADMIN) {
@@ -107,7 +106,8 @@ export const deleteReview = async (req, res, next) => {
       userId: _id,
     };
   }
-  const allReviews = reviewModel
+  const product =await  productModel.findById(productId);
+  const allReviews =await reviewModel
     .find({ productId: productId })
     .select("rating");
   const sum = allReviews.reduce((acc, review) => acc + review.rating, 0);
@@ -124,7 +124,7 @@ export const deleteReview = async (req, res, next) => {
     );
   }
 
-  return res.status(200).json({ message: "Done", review });
+  return res.status(200).json({ message: "Done" });
 };
 
 export const getProductReviews = errorHandler(async (req, res, next) => {
@@ -171,19 +171,21 @@ export const isAllowToRev= errorHandler(async (req, res, next) => {
     return next(new AppError("You have not ordered this product yet.", 400));
   }
   let IsReviewed;
-if (isOrdered) {
-  IsReviewed = await reviewModel.findOne({
-    productId,
-    userId: _id,
-  });
-  if (IsReviewed) {
-    return next(
-      new AppError("You have already reviewed this product before.", 400)
-    );
+  if (isOrdered) {
+    IsReviewed = await reviewModel.findOne({
+      productId,
+      userId: _id,
+    });
+    if (IsReviewed) {
+      return next(
+        new AppError("You have already reviewed this product before.", 400)
+      );
+    }
+  }else{
+
+    return res.status(200).json({
+      message: "Done",
+      isAllowToRev: !IsReviewed,
+    })
   }
-}
-  return res.status(200).json({
-    message: "Done",
-    isAllowToRev: !IsReviewed,
-  })
 })

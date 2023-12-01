@@ -29,6 +29,7 @@ const userSchema = new Schema(
         systemRoles.ADMIN,
         systemRoles.SUPER_ADMIN,
         systemRoles.DELIVERY_MAN,
+        systemRoles.FAKE_ADMIN,
       ],
     },
     deliveryDetails: {

@@ -73,7 +73,10 @@ export const getAllCoupons = errorHandler(async (req, res, next) => {
   const { _id } = req.user;
   const { search } = req.query;
   let options = { createdBy: _id };
-  if (req.user.role == systemRoles.SUPER_ADMIN) {
+  if (
+    req.user.role == systemRoles.SUPER_ADMIN ||
+    req.user.role == systemRoles.FAKE_ADMIN
+  ) {
     options = {};
   }
   const apiFeaturesInstance = new ApiFeatures(
@@ -93,53 +96,51 @@ export const getAllCoupons = errorHandler(async (req, res, next) => {
     .json({ message: "done", page: req.query.page, coupons });
 });
 
-export const applyCoupon = 
-  async (req, res, next, model, modelName) => {
-    const { couponCode } = req.body;
-    const { _id } = req.user;
-    // Find the coupon by its code
-    const coupon = await couponModel.findOne({
-      couponCode: couponCode.toLowerCase(),
+export const applyCoupon = async (req, res, next, model, modelName) => {
+  const { couponCode } = req.body;
+  const { _id } = req.user;
+  // Find the coupon by its code
+  const coupon = await couponModel.findOne({
+    couponCode: couponCode.toLowerCase(),
+  });
+
+  // Check if the coupon exists
+  if (!coupon) {
+    return next(new AppError("Invalid coupon code.", 404));
+  }
+  const orders = await orderModel.find({ userId: _id });
+
+  // Check if the coupon is valid
+  const couponResult = isCouponValid(model, modelName, coupon, orders, _id);
+  // Apply the coupon if it's valid
+  if (couponResult === true) {
+    applyAndSaveCoupon(model, coupon);
+
+    // Increment the usage count of the coupon
+    await couponModel.findByIdAndUpdate(coupon._id, {
+      $inc: { usageCount: 1 },
     });
 
-    // Check if the coupon exists
-    if (!coupon) {
-      return next(new AppError("Invalid coupon code.", 404));
-    }
-    const orders = await orderModel.find({ userId: _id });
-
-    // Check if the coupon is valid
-    const couponResult = isCouponValid(model, modelName, coupon, orders, _id);
-    // Apply the coupon if it's valid
-    if (couponResult === true) {
-      applyAndSaveCoupon(model, coupon);
-
-      // Increment the usage count of the coupon
+    // Update the model with the applied coupon
+    model.coupon = coupon._id;
+    model.save();
+    if (modelName == "Order") {
       await couponModel.findByIdAndUpdate(coupon._id, {
-        $inc: { usageCount: 1 },
-      });
-
-      // Update the model with the applied coupon
-      model.coupon = coupon._id;
-      model.save();
-      if (modelName == "Order") {
-        await couponModel.findByIdAndUpdate(coupon._id, {
-          $push: {
-            usageHistory: {
-              userId: _id,
-              orderId: model._id,
-              usageDate: new Date(),
-            },
+        $push: {
+          usageHistory: {
+            userId: _id,
+            orderId: model._id,
+            usageDate: new Date(),
           },
-        });
-      }
-      return true;
-    } else {
-      const { message, cause } = couponResult;
-      return { message, cause };
+        },
+      });
     }
+    return true;
+  } else {
+    const { message, cause } = couponResult;
+    return { message, cause };
   }
-
+};
 
 export const toggleDisabled = async (req, res, next) => {
   const { _id } = req.params;

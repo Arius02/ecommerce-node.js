@@ -19,17 +19,22 @@ const router = Router();
 
 router
   .route("/")
-  .post(auth(), validationCoreFunction(addReviewSchema), addReview)
+  .post(
+    auth(),
+    allowTo([systemRoles.USER, systemRoles.FAKE_ADMIN]),
+    validationCoreFunction(addReviewSchema),
+    addReview
+  )
   .put(
     auth(),
-    // allowTo([systemRoles.USER]),
+    allowTo([systemRoles.USER, systemRoles.FAKE_ADMIN]),
     validationCoreFunction(updateReviewSchema),
     updateReview
   );
 router.delete(
-  "/:reviewId",
+  "/:productId/:reviewId",
   auth(),
-  // allowTo([systemRoles.USER]),
+  allowTo([systemRoles.USER, systemRoles.FAKE_ADMIN]),
   validationCoreFunction(deleteReviewSchema),
   deleteReview
 );
@@ -38,6 +43,6 @@ router.get(
   validationCoreFunction(getProductReviewsSchema),
   getProductReviews
 );
-router.get("/allow", auth(), isAllowToRev);
+router.get("/allow/:productId", auth(), isAllowToRev);
 
 export default router;

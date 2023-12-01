@@ -26,7 +26,7 @@ router
   )
   .get(
     auth(),
-    allowTo([systemRoles.SUPER_ADMIN, systemRoles.ADMIN]),
+    allowTo([systemRoles.SUPER_ADMIN, systemRoles.ADMIN, systemRoles.FAKE_ADMIN]),
     getAllCoupons
   );
 router

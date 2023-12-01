@@ -20,8 +20,7 @@ export const cloudindaryPath = (
   itemName,
   customId,
   categoryCustomId,
-  subCategoryCustomId,
-  
+  subCategoryCustomId
 ) => {
   if (itemName == "product") {
     return `ecommerce/Categories/${categoryCustomId}/subCategories/${subCategoryCustomId}/Products/${customId}`;
@@ -39,7 +38,7 @@ export const addItem = async (Model, itemName, req, res, next) => {
   const { _id } = req.user;
   let customIds = null;
   let category;
-  if ( itemName == "subCategory") {
+  if (itemName == "subCategory") {
     customIds = {};
     category = await categoryModel.findById(categoryId);
     if (!category) {
@@ -47,7 +46,6 @@ export const addItem = async (Model, itemName, req, res, next) => {
     }
     customIds.categoryId = category.customId;
   }
-
 
   if (!req.file) {
     return next(new AppError(`please upload a ${itemName} image`, 400));
@@ -59,11 +57,7 @@ export const addItem = async (Model, itemName, req, res, next) => {
 
   const slug = slugify(name, "-");
   const customId = nanoid();
-  const path = cloudindaryPath(
-    itemName,
-    customId,
-    customIds?.categoryId,
-  );
+  const path = cloudindaryPath(itemName, customId, customIds?.categoryId);
   const { secure_url, public_id } = await handleUploadSingleImage(
     req.file.path,
     path
@@ -78,7 +72,6 @@ export const addItem = async (Model, itemName, req, res, next) => {
     category: category
       ? { categoryId, categoryCustomId: category.customId }
       : undefined,
-    
   };
 
   const newItem = await Model.create(itemData);
@@ -93,7 +86,7 @@ export const addItem = async (Model, itemName, req, res, next) => {
 // function for updating categories, subcategories, and brands
 export const updateItem = async (Model, itemName, req, res, next) => {
   const { _id } = req.params;
-  const { categoryId,  } = req.body;
+  const { categoryId } = req.body;
   const item = await Model.findById(_id);
 
   if (!item) {
@@ -126,7 +119,7 @@ export const updateItem = async (Model, itemName, req, res, next) => {
     const path = cloudindaryPath(
       itemName,
       item.customId,
-      item.category?.categoryCustomId,
+      item.category?.categoryCustomId
     );
     const { secure_url, public_id } = await handleSingleImageUpdateAndDelete(
       req.file.path,
@@ -158,29 +151,32 @@ export const deleteItem = async (Model, itemName, req, res, next) => {
   try {
     const item = await Model.findById(_id).session(session);
     if (!item) {
-      return next(new AppError("Item not found", 404)); 
+      return next(new AppError("Item not found", 404));
     }
     if (item.createdBy.toString() !== req.user._id.toString()) {
       return next(new AppError(`you have no access to this ${itemName}`, 401));
     }
 
     await Model.deleteOne({ _id }).session(session);
-   
-    if (itemName === "category") {
 
+    if (itemName === "category") {
       await subCategoryModel
         .deleteMany({ "category.categoryId": _id })
         .session(session);
-    await productModel.deleteMany({ "category.categoryId": _id }).session(session);
+      await productModel
+        .deleteMany({ "category.categoryId": _id })
+        .session(session);
       path = cloudindaryPath(itemName, item.customId);
     } else if (itemName === "subCategory") {
-      await productModel.deleteMany({ "subCategory.subCategoryId": _id }).session(session);
+      await productModel
+        .deleteMany({ "subCategory.subCategoryId": _id })
+        .session(session);
       path = cloudindaryPath(
         itemName,
         item.customId,
         item.category.categoryCustomId
       );
-    } 
+    }
 
     // Commit the transaction
     await session.commitTransaction();
@@ -219,15 +215,13 @@ export const handlePrice = (appliedDiscount, price, product) => {
   }
 };
 
-
-
 // Helper function to create an order
 export const createOrder = async (
   userId,
   products,
   totalPrice,
   priceAfterDiscount,
-   deliveryDetails,
+  deliveryDetails,
   couponId,
   status
 ) => {
@@ -236,7 +230,7 @@ export const createOrder = async (
     products,
     totalPrice,
     priceAfterDiscount,
-     deliveryDetails,
+    deliveryDetails,
     PaymentMethod: status == "waitPayment" ? "card" : "cash",
     status,
   });
@@ -275,7 +269,6 @@ export const updateProductStock = async (products, decStock = true) => {
   await productModel.bulkWrite(options);
 };
 
-
 // cart helpers
 function handleTotalPrice(cart) {
   let totalPrice = 0;
@@ -285,8 +278,8 @@ function handleTotalPrice(cart) {
   cart.totalPrice = totalPrice;
 }
 
-// helper for add to cart 
-export const addToCart = async (req, res, next,options) => {
+// helper for add to cart
+export const addToCart = async (req, res, next, options) => {
   const { productId, quantity } = req.body;
 
   //  Check if the product exists and has enough stock
@@ -352,9 +345,44 @@ export const addToCart = async (req, res, next,options) => {
 
   return res.status(201).json({ message: "Done", cart: isCartExist });
 };
+// helper for reduce from cart
 
-// helper for remove form cart 
-export const removeFromCart = async(req, res, next,options ) => {
+export const reduceFromCart = async (req, res, next, options) => {
+  const { productId } = req.body;
+  const cart = await cartModel.findOne(options);
+
+  if (!cart) {
+    return next(new AppError("Cart not found", 404));
+  }
+
+  const productIndex = cart.products.findIndex(
+    (product) => product.productId.toString() == productId.toString()
+  );
+
+  if (productIndex === -1) {
+    return next(new AppError("Product not found in the cart", 404));
+  }
+
+  const product = cart.products[productIndex];
+  if (product.quantity >= 2) {
+    // Reduce the quantity
+    cart.products[productIndex].quantity -= 1;
+  } else {
+    // Remove the product from the cart if quantity is 1
+    cart.products.splice(productIndex, 1);
+  }
+  handleTotalPrice(cart);
+  if (cart.coupon) {
+    const coupon = await couponModel.findById(cart.coupon);
+    applyAndSaveCoupon(cart, coupon);
+  }
+  await cart.save();
+  return res.status(201).json({
+    message: "Done",
+  });
+};
+// helper for remove form cart
+export const removeFromCart = async (req, res, next, options) => {
   const { productId } = req.body;
   // Check if the product with the given ID exists (optional)
   const product = await productModel.findById(productId);
@@ -376,24 +404,23 @@ export const removeFromCart = async(req, res, next,options ) => {
   }
   // Recalculate the total price for the cart
   handleTotalPrice(cart);
-  
+
   // Retrieve the associated coupon and apply it to the cart
   if (cart.coupon) {
     const coupon = await couponModel.findById(cart.coupon);
     applyAndSaveCoupon(cart, coupon);
   }
-  if(cart.products.length==0){
-    await cartModel.findByIdAndDelete(cart._id)
-  }else{
+  if (cart.products.length == 0) {
+    await cartModel.findByIdAndDelete(cart._id);
+  } else {
     await cart.save();
   }
   // Respond with the updated cart
   return res.status(200).json({ message: "Done" });
-}
+};
 
-// helper for clear cart 
-export const clearCart = (async (req, res, next,options) => {
- 
+// helper for clear cart
+export const clearCart = async (req, res, next, options) => {
   const cart = await cartModel.findOneAndDelete(options);
 
   // Decrement the usage count of associated coupons (if any)
@@ -405,10 +432,10 @@ export const clearCart = (async (req, res, next,options) => {
 
   // Respond with a success message
   return res.status(200).json({ message: "Done" });
-});
+};
 
-// helper to get cart 
-export const getCart = (async (req, res, next,options) => {
+// helper to get cart
+export const getCart = async (req, res, next, options) => {
   // Find the user's cart and populate the products with their details
   const cart = await cartModel.findOne(options).populate([
     {
@@ -423,4 +450,4 @@ export const getCart = (async (req, res, next,options) => {
 
   // Respond with the populated cart
   return res.status(200).json({ message: "Done", cart });
-});
+};

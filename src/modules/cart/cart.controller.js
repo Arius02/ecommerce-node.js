@@ -8,17 +8,27 @@ import {
   addToCart,
   clearCart,
   getCart,
+  reduceFromCart,
   removeFromCart,
 } from "../../utils/factory.js";
 import { applyCoupon } from "../coupon/coupon.controller.js";
 
-export const addToCartForUser = errorHandler(async (req, res, next) => {
+export const addToCartForUser = (async (req, res, next) => {
   return addToCart(req, res, next, { userId: req.user._id });
 });
 
-export const addToCartForGuest = async (req, res, next) => {
+export const addToCartForGuest = (async (req, res, next) => {
   return addToCart(req, res, next, { _id: req.body.cartId });
+});
+export const reduceFromUserCart =async (req, res, next) => {
+  const { _id } = req.user;
+  return reduceFromCart(req, res, next, { userId: _id });
 };
+export const reduceFromCartForGuest =( async (req, res, next) => {
+  const { cartId } = req.body;
+
+  return reduceFromCart(req, res, next, { _id: cartId });
+});
 export const mergeCart = errorHandler(async (req, res, next) => {
   const { cartId } = req.body;
   const { _id: userId } = req.user;

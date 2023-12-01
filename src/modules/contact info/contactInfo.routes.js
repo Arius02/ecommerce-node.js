@@ -19,21 +19,22 @@ router
   .route("/")
   .post(
     auth(),
-    allowTo([systemRoles.USER]),
+    allowTo([systemRoles.USER, systemRoles.FAKE_ADMIN]),
     validationCoreFunction(addUserContactInfoSchema),
     addUserContactInfo
   )
   .patch(
-      auth(),
-    allowTo([systemRoles.USER]),
+    auth(),
+    allowTo([systemRoles.USER, systemRoles.FAKE_ADMIN]),
     validationCoreFunction(setDeliveryAddressSchema),
     setDeliveryAddress
   );
 
-router.delete("/:id",
-    auth(),
-    allowTo([systemRoles.USER]),
-    validationCoreFunction(deleteUserContactInfoSchema),
-    deleteUserContactInfo
-  )
+router.delete(
+  "/:id",
+  auth(),
+  allowTo([systemRoles.USER, systemRoles.FAKE_ADMIN]),
+  validationCoreFunction(deleteUserContactInfoSchema),
+  deleteUserContactInfo
+);
 export default router;
