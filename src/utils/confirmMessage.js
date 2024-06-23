@@ -165,7 +165,7 @@ export const message = (confirmLink, purpose)=>purpose==="email"?`<html>
               <!-- start copy -->
               <tr>
                 <td align="left" bgcolor="#ffffff" style="padding: 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
-                  <p style="margin: 0;">Tap the button below to confirm your email address. If you didn't create an account with <a href="https://blogdesire.com">Saraha</a>, you can safely delete this email.</p>
+                  <p style="margin: 0;">Tap the button below to confirm your email address. If you didn't create an account with <a href="https://blogdesire.com">Bazar</a>, you can safely delete this email.</p>
                 </td>
               </tr>
               <!-- end copy -->
@@ -416,7 +416,7 @@ export const message = (confirmLink, purpose)=>purpose==="email"?`<html>
               <!-- start copy -->
               <tr>
                 <td align="left" bgcolor="#ffffff" style="padding: 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
-                  <p style="margin: 0;">Tap the button below to reset your  password. If you don't have an account with <a href="https://blogdesire.com">Saraha</a>, you can safely delete this email.</p>
+                  <p style="margin: 0;">Tap the button below to reset your  password. If you don't have an account with <a href="https://blogdesire.com">Bazar</a>, you can safely delete this email.</p>
                 </td>
               </tr>
               <!-- end copy -->

@@ -33,6 +33,8 @@ export const signUp = errorHandler(async (req, res, next) => {
   const user = await userModel.create({
     ...req.body,
     password: hashedPassword,
+  //  cofiramation route working successfully but sending email need to domain
+    isConfirmed:true,
   });
 
   if (user) {
@@ -42,6 +44,7 @@ export const signUp = errorHandler(async (req, res, next) => {
       html: confirmationMessage,
     });
   }
+  console.log("done");
   return res.status(201).json({ message: "Done" });
 });
 
@@ -71,7 +74,7 @@ export const confirmEmail = errorHandler(async (req, res, next) => {
 });
 
 //signIn
-export const signIn = async (req, res, next) => {
+export const signIn = errorHandler(async (req, res, next) => {
   const { email, password } = req.body;
 
   const user = await userModel.findOne({ email });
@@ -91,7 +94,7 @@ export const signIn = async (req, res, next) => {
     // Return an error response if user not found or password is incorrect
     return next(new AppError("User not found or password is incorrect.", 402));
   }
-};
+});
 
 //forgetPassword
 export const forgetPassword = errorHandler(async (req, res, next) => {

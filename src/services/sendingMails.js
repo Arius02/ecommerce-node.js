@@ -1,33 +1,23 @@
 import { createTransport } from "nodemailer";
+import { Resend } from "resend";
 export async function sendEmail({
   to = "mahlawyua07@gmail.com",
   subject = "Confirmation Email",
   html = "<b>Confirmation Email</b>",
   attachments = [],
 }) {
-  const transporter = createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.MESSAGING_EMAIL,
-      pass: process.env.GMAIL_APP_PASSWORD,
-    },
-    tls:{
-          rejectUnauthorized:false
-      }
+  try {
+    const resend = new Resend(process.env.MESSAGING_API_KEY);
+    await resend.emails.send({
+      from: `"Bazar Market" <onboarding@resend.dev>`, // sender address
+      to:"delivered@resend.dev",
+      subject,
+      html,
+      attachments,
     });
-  // send mail with defined transport object
-  const info = await transporter.sendMail({
-    from: `"Saraha App" <${process.env.MESSAGING_EMAIL}>`, // sender address
-    to, // list of receivers
-    subject, // Subject line
-    html, // html body
-    attachments,
-  });
-  
-  if (info.accepted.length) {
-    return true
+    return true;
+  } catch (err) {
+    console.log(err);
+    return false;
   }
-  return false
 }
